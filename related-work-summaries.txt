@@ -1,0 +1,91 @@
+Next:
+References in the serverless LLM paper: as demonstrated in platforms
+such as Amazon SageMaker [63], Azure [50], KServe [16],
+and HuggingFace [35].
+https://dl.acm.org/doi/epdf/10.1145/3759441.3759443
+
+Singularity: Planet-scale, preemptive and elastic scheduling of AI workloads
+https://arxiv.org/pdf/2202.07848
+
+This paper shares lots of interesting technical details about the internals of deep learning models and about optimizations that can be applied. It’s very useful for anyone who is looking to crack-open the model. Their use of device proxy is interesting and could be useful for us. They are solving a harder problem, because they address training and at this point we are interested in inference. 
+ServerlessLLM: low-latency serverless inference for large language models
+https://dl.acm.org/doi/10.5555/3691938.3691946
+https://www.usenix.org/system/files/osdi24-fu.pdf
+https://seu-esg.github.io/slides/ServerlessLLM.pdf?utm_source=chatgpt.com
+
+This paper presents ServerlessLLM, a distributed system designed to support low-latency serverless inference for Large Language Models (LLMs). By harnessing the substantial near-GPU storage and memory capacities of inference servers, ServerlessLLM achieves effective local checkpoint storage, minimizing the need for remote checkpoint downloads and ensuring efficient checkpoint loading. The design of ServerlessLLM features three core contributions: (i) fast multi-tier checkpoint loading, featuring a new loading-optimized checkpoint format and a multi-tier loading system, fully utilizing the bandwidth of complex storage hierarchies on GPU servers; (ii) efficient live migration of LLM inference, which enables newly initiated inferences to capitalize on local checkpoint storage while ensuring minimal user interruption; and (iii) startup-time-optimized model scheduling, which assesses the locality statuses of checkpoints on each server and schedules the model onto servers that minimize the time to start the inference. Comprehensive evaluations, including microbenchmarks and real-world scenarios, demonstrate that Serverless-LLM dramatically outperforms state-of-the-art serverless systems, reducing latency by 10 - 200X across various LLM inference workloads.
+
+GeminiFS: A Companion File System for GPUs
+https://www.usenix.org/system/files/fast25-qiu.pdf
+Shi Qiu, Weinan Liu, Yifan Hu, Jianqin Yan, and Zhirong Shen, NICE Lab, Xiamen University; Xin Yao, Renhai Chen, and Gong Zhang, Huawei Theory Lab; Yiming Zhang, NICE Lab, Xiamen University and Shanghai Jiao Tong University
+GPU-centric storage solutions enable direct access from the GPU to the storage device via NVMe queues, completely bypassing the CPU. These solutions alleviate the problems of previous CPU-centric solutions that relied on the host CPU to initiate data storage access, such as high CPU-GPU synchronization overheads, I/O traffic amplification, and high CPU processing latency. However, the state-of-the-art GPU-centric solutions have no file abstraction or management functionalities (e.g., fine-grained isolation and access control) of traditional host file systems, and cannot satisfy the needs of GPU-accelerated machine learning (ML) applications like GNN and LLM which require fast file access and data sharing. Therefore, existing GPU-centric storage solutions are inefficient and inconvenient when being applied in practical ML scenarios.
+This paper presents a companion file system (called GeminiFS) for GPUs. GeminiFS offers a file system interface to GPU programs that enables direct file-based access to NVMe storage, which is managed by the host file system. GeminiFS realizes metadata synchronization between the host and GPU file systems by embedding the metadata directly into the files. We extend the existing NVMe driver to allow the CPU and the GPU to set up their control planes in parallel for the storage device. Moreover, GeminiFS provides a GPU-friendly, software-defined page cache to fully utilize the internal bandwidth of the GPU. We further offer a convenient library (libGemini) tailored for GPU programmers, which abstracts away various underlying complexities thereby reducing programming complexity. Extensive evaluation shows that GeminiFS significantly outperforms the state-of-the-art storage solutions for large-scale ML workloads.
+
+Serverless computing on heterogeneous computers
+https://dl.acm.org/doi/pdf/10.1145/3503222.3507732
+Existing serverless computing platforms are built upon homoge- neous computers, limiting the function density and restricting serverless computing to limited scenarios. We introduce Molecule, the first serverless computing system utilizing heterogeneous com- puters. Molecule enables both general-purpose devices (e.g., Nvidia DPU) and domain-specific accelerators (e.g., FPGA and GPU) for serverless applications that significantly improve function density (50% higher) and application performance (up to 34.6x). To achieve these results, we first propose XPU-Shim, a distributed shim to bridge the gap between underlying multi-OS systems (when using general-purpose devices) and our serverless runtime (i.e., Molecule). We further introduce vectorized sandbox, a sandbox abstraction to abstract hardware heterogeneity (when using domain-specific accelerators). Moreover, we also review state-of-the-art serverless optimizations on startup and communication latency and overcome the challenges to implement them on heterogeneous computers. We have implemented Molecule on real platforms with Nvidia DPUs and Xilinx FPGAs and evaluate it using benchmarks and real-world applications.
+Illuminating the Hidden Challenges of Serverless LLM Systems
+https://dl.acm.org/doi/epdf/10.1145/3774899.3775017
+This is a vision paper on Serverless LLMs, it focuses primarily on bringing current LLM APIs closer to a serverless paradigm. They focus on APIs similar to what OpenAI & Anthropic might expose with just their proprietary models, and do not address the custom model cold-start problem. In fact their proposal actually abstracts model choice away completely and determines the models at inference time depending on client-specified accuracy requirements and resource availability. The paper essentially aims to provide configurable LLM pipelines as a serverless platform for non-technical users.
+PipeBoost: Resilient Pipelined Architecture for Fast Serverless LLM Scaling
+https://arxiv.org/pdf/2503.17707
+Minimize coldstarts by starting inference before the model is fully loaded. Keep a shared base model loaded on the GPU, stream in LoRA adapters as inference starts.
+ServerlessLoRA: Minimizing Latency and Cost in Serverless Inference for LoRA-Based LLMs
+https://arxiv.org/pdf/2505.14468?
+Similar to PipeBoost, base models with lora adapters can be shared to reduce resource footprint & cold-start times.
+HydraServe: Minimizing Cold Start Latency for Serverless LLM Serving in Public Clouds
+https://arxiv.org/pdf/2502.15524
+Minimizes coldstarts by fetching models from peers. Arranges workers & models to minimize network contention.
+
+Towards Swift Serverless LLM Cold Starts with ParaServe
+https://chaojin0310.github.io/files/papers/Preprint-ParaServe.pdf
+Minimizes coldstarts by fetching models from peers (follow up to hydraserve). Splits models among many peers to leverage total aggregated bandwidth.
+WAGES: Workload-Aware GPU Sharing System for Energy-Efficient Serverless LLM Serving
+https://dl.acm.org/doi/pdf/10.1145/3731599.3767396
+Minimizes energy use of serverless LLM platforms by improving utilization through colocation  (NVIDIA MPS) and underclocking inferences.
+DEEPSERVE: Serverless Large Language Model Serving at Scale
+https://www.usenix.org/system/files/atc25-hu-junhao.pdf
+Huawei’s serverless LLM solution which has been in production for over a year. Custom serving/inference engine. NPU-NPU model sharing. 
+
+For LLM scheduling they break up inference into pre-loading, where they process input tokens and generate the KV-cache, and decoding, where they use the KV-cache to iteratively generate the next token. The former task is compute-bound; the latter is memory bound. Certain tasks can reuse the KV-cache. They have a scheduler that uses either co-location or disaggregation, depending if cache reuse or cache contention dominates.
+They talk about model scaling: if you have a few nodes running a model, but need more. They can load model weights from SSD (takes dozens of seconds), DRAM (takes seconds) or from the memory of another NPU (takes sub-seconds).
+
+What’s missing: (1) the simulator to evaluate trade-offs in running workloads on different hardware (CPU/GPU) and memory (SSD, DRAM, HBM) given SLOs and serverless keep-alive policies. (2) Understanding of various workloads: what are the characteristics of LLMs vs smaller custom models, vs agents, etc. Do they all need the same optimizations? 
+
+TODO: Check out cited work: vLLM [22], SGLang [50], and NanoFlow [52].
+
+RainbowCake: Mitigating Cold-starts in Serverless with Layer-wise Container Caching and Sharing
+https://dl.acm.org/doi/epdf/10.1145/3617232.3624871
+Medusa: Accelerating Serverless LLM Inference with Materialization
+https://dl.acm.org/doi/pdf/10.1145/3669940.3707285
+Focuses on reducing LLM load times through optimizing KV cache & CUDA graph initialization. Doesn’t touch model loading itself.
+Towards Resource-Efficient Serverless LLM Inference with SLINFER
+https://arxiv.org/pdf/2507.00507
+Increasing LLM serving capacity through balancing inferences across GPUs and CPUs.
+
+LMSYS-CHAT-1M: A LARGE-SCALE REAL-WORLD LLM CONVERSATION DATASET
+https://arxiv.org/pdf/2309.11998
+A real dataset of LLM inference patterns in the wild. 
+
+
+Efficient LLM Serving for Agentic Workflows: A Data Systems Perspective
+https://arxiv.org/abs/2603.16104
+This paper designed a systems level architecture for Agent benchmark eval agent’s end-to-end latency, throughput, cost efficiency, and cache hit rate/reuse effectiveness. And it also provides reference datasets for benchmark testing. 
+
+A CPU-Centric Perspective on Agentic AI
+https://arxiv.org/pdf/2511.00739
+This paper points out CPU becomes a major bottleneck in agentic workload because of the use of external tools and orchestration logic.
+
+
+ServeGen
+https://github.com/alibaba/ServeGen
+https://arxiv.org/pdf/2505.09999
+Alibaba product that generates realistic LLM traces based on their own observed production workloads
+Prefill is especially expensive in reasoning models
+Because the prompts are bigger?
+Reusing the kv cache is definitely an interesting optimization
+~200 foundational models.
+~1000 fine tuned models
+O(10K) GPUs
+“Whale” clients can shift large scale demands
+

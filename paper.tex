@@ -1,0 +1,230 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Template for USENIX papers.
+%
+% History:
+%
+% - TEMPLATE for Usenix papers, specifically to meet requirements of
+%   USENIX '05. originally a template for producing IEEE-format
+%   articles using LaTeX. written by Matthew Ward, CS Department,
+%   Worcester Polytechnic Institute. adapted by David Beazley for his
+%   excellent SWIG paper in Proceedings, Tcl 96. turned into a
+%   smartass generic template by De Clarke, with thanks to both the
+%   above pioneers. Use at your own risk. Complaints to /dev/null.
+%   Make it two column with no page numbering, default is 10 point.
+%
+% - Munged by Fred Douglis <douglis@research.att.com> 10/97 to
+%   separate the .sty file from the LaTeX source template, so that
+%   people can more easily include the .sty file into an existing
+%   document. Also changed to more closely follow the style guidelines
+%   as represented by the Word sample file.
+%
+% - Note that since 2010, USENIX does not require endnotes. If you
+%   want foot of page notes, don't include the endnotes package in the
+%   usepackage command, below.
+% - This version uses the latex2e styles, not the very ancient 2.09
+%   stuff.
+%
+% - Updated July 2018: Text block size changed from 6.5" to 7"
+%
+% - Updated Dec 2018 for ATC'19:
+%
+%   * Revised text to pass HotCRP's auto-formatting check, with
+%     hotcrp.settings.submission_form.body_font_size=10pt, and
+%     hotcrp.settings.submission_form.line_height=12pt
+%
+%   * Switched from \endnote-s to \footnote-s to match Usenix's policy.
+%
+%   * \section* => \begin{abstract} ... \end{abstract}
+%
+%   * Make template self-contained in terms of bibtex entires, to allow
+%     this file to be compiled. (And changing refs style to 'plain'.)
+%
+%   * Make template self-contained in terms of figures, to
+%     allow this file to be compiled. 
+%
+%   * Added packages for hyperref, embedding fonts, and improving
+%     appearance.
+%   
+%   * Removed outdated text.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix2019_v3}
+
+\setlength {\marginparwidth }{2cm}
+\usepackage{todonotes}
+% to be able to draw some self-contained figs
+\usepackage{tikz}
+\usepackage{amsmath}
+
+\newcommand{\iantodo}[1]{\todo[color=green!40]{#1}}
+
+% inlined bib file
+\usepackage{filecontents}
+
+%-------------------------------------------------------------------------------
+\begin{filecontents}{\jobname.bib}
+%-------------------------------------------------------------------------------
+@misc{serverlessllm,
+      title={ServerlessLLM: Low-Latency Serverless Inference for Large Language Models}, 
+      author={Yao Fu and Leyang Xue and Yeqi Huang and Andrei-Octavian Brabete and Dmitrii Ustiugov and Yuvraj Patel and Luo Mai},
+      year={2024},
+      eprint={2401.14351},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2401.14351}, 
+}
+
+\end{filecontents}
+
+%-------------------------------------------------------------------------------
+\begin{document}
+%-------------------------------------------------------------------------------
+
+%don't want date printed
+\date{}
+
+% make title bold and 14 pt font (Latex default is non-bold, 16 pt)
+\title{\Large \bf We Need to Talk About Serverless LLMs}
+
+%for single author (just remove % characters)
+\author{
+{\rm Your N.\ Here}\\
+Your Institution
+\and
+{\rm Second Name}\\
+Second Institution}
+
+\maketitle
+
+%-------------------------------------------------------------------------------
+\begin{abstract}
+%-------------------------------------------------------------------------------
+Lorem ipsum dolor set amet.
+\end{abstract}
+
+
+%-------------------------------------------------------------------------------
+\section{Introduction}
+%-------------------------------------------------------------------------------
+
+Lorem ipsum dolor set amet.
+
+%-------------------------------------------------------------------------------
+\section{Background}
+%-------------------------------------------------------------------------------
+
+% inference stages: loading, kv cache generation, autoregression
+
+% Serverless LLMs have garnered lots of recent attention, however we note that this term actually encompasses a multitude of underlying services, each presenting fundamentally different interfaces to end users.
+% We categorize these services into 4 classes: Models as a Service, Bring Your own Model, Fine Tuned Inference as a Service, and Agents as a Service.
+% 
+% \paragraph{Model as a Service}
+% \iantodo{I want to add that this is the historical first step}
+% Under this paradigm, a small number of models are hosted by an inference provider and users pay for tokens.
+% This pattern is the sole mode of access for proprietary closed weight LLMs: ChatGPT, Gemini, Claude, etc.
+% The providers must scale the number of inferencing instances along with live user demand, however
+% 
+% \paragraph{Bring Your own Model}
+% Bring Your own Model differs primarily in that clients
+
+% Key challenges (SLO, deployment density)
+% Notes:
+% servegen argues that per tenant request patterns stay relatively stable
+% this motivates keepalive policies by tenant
+% keepalive can block new requests. (keep KV cache around, keep model loaded)
+% many existing works implicitly mention prewarming (models to dram), but few provide a real policy for doing so
+
+\section{Related Work}
+
+\newcommand{\ServerlessLLM}{\textsc{ServerlessLLM}}
+\newcommand{\HydraServe}{\textsc{HydraServe}}
+\newcommand{\DEEPSERVE}{\textsc{DeepServe}}
+\newcommand{\ServerlessLoRA}{\textsc{ServerlessLoRA}}
+\newcommand{\PipeBoost}{\textsc{PipeBoost}}
+\newcommand{\Medusa}{\textsc{Medusa}}
+\newcommand{\InstaInfer}{\textsc{InstaInfer}}
+\newcommand{\SLINFER}{\textsc{Slinfer}}
+\newcommand{\WAGES}{\textsc{Wages}}
+\newcommand{\Torpor}{\textsc{Torpor}}
+
+
+\textcolor{red}{context: this work is for an OSR submission, short paper format (2-6) pages. We're positioning this paper as "educational", we'd like it to be a concise place to jump off and learn about serverless LLMs \& open problems. There is some background missing, sorry :-(}
+
+\paragraph{Model Loading.}
+Loading model parameters into GPU memory is the single largest contributor to cold start latency for large LLMs.
+The cost of shipping model weights into GPU memory prior can easily dwarf the cost of a single inference.
+
+\ServerlessLLM~\cite{serverlessllm} optimizes model loading by effectively managing the deep storage hierarchy of GPU servers.
+Prior to inference, a model checkpoint may live in VRAM, DRAM, on disk or in remote storage.
+Requests are routed to nodes where model checkpoints are local, avoiding costly model loading from remote storage.
+In cases where a request is routed to a busy node, the authors provide the insight that live migration of inferences over high bandwidth GPU-GPU links can be used to create space for incoming requests.
+
+\HydraServe~\cite{hydraserve} takes another approach to the model loading problem, distributing model checkpoints among peer nodes and aggregating the available network bandwidth during model loading.
+Data movement during model loading can saturate network bandwidth, so the authors design a network contention aware policy for worker placement that minimizes SLO violations stemming from network interference.
+
+\DEEPSERVE~\cite{deepserve}, Huawei's production serverless LLM solution, implements multiple model loading optimizations to minimize cold start times.
+In addition to proactively loading models into DRAM, \DEEPSERVE uses high bandwidth NPU-NPU links to scale out running instances in response to load bursts.
+The NPU-fork path proves to be an order of magnitude faster than loading from DRAM.
+
+\iantodo{new lambda Scale paper}
+
+\paragraph{Base Model Sharing.}
+Another angle for optimization lies in the duplication of parameters between models.
+In particular, fine tuned models derived from the same base model share nearly all of the base model's parameters.
+LoRA~\cite{lora}, a popular fine tuning technique, explicitly freezes the weights of the base model during training and updates only a small number of new low rank matrices.
+\ServerlessLoRA~\cite{serverlesslora} leverages this to isolate the loading stages of base models from their fine tuned parameters.
+By keeping base models loaded in GPU memory, additional inferences can be served by just loading the adaptive LoRA layers, reducing cold start delays and increasing deployment density.
+\PipeBoost~\cite{pipeboost} takes this idea further, and allows for inference to start on the GPU in parallel with the loading of the adaptive layers.
+
+\paragraph{Model Initialization.}
+LLM inference engines leverage two large datastructures to optimize inference throughput: KV caches and CUDA graphs.
+These datastructures are constructed before inference starts, and contribute to cold start delays in the serverless context.
+\Medusa~\cite{medusa} targets this initialization overhead with materialization, delegating a portion of the initialization to offline preprocessing.
+\Medusa introduces optimizations to remove dynamic memory mangement during KV cache creation, and further parallelizes this stage alongside model loading.
+Similarly, CUDA graphs are consistent in structure between consecutive model loads, but still hold runtime dependencies on dynamically determined data pointer values.
+\Medusa addresses non-determinism by inserting a shim layer to abstract runtime dependent kernel parameters.
+
+\paragraph{Pre-warming.}
+Pre-warming is an established, industry recognized technique in traditional serverless systems to mitigate cold starts.
+Data needed to execute a function instance is proactively loaded into DRAM in anticipation of future requests, drastically reducing container loading overhead.
+Naturally, serverless LLMs have also adopted pre-warming.
+
+\DEEPSERVE \cite{DEEPSERVE} implements pre-warming natively by predictively loading up to 1.5TB worth of models to DRAM.
+Unfortunately for LLM inferences, even if the model is present in DRAM, loading to GPU memory can still take significant time.
+Many prior works assume pre-warming as an implicit starting point for cold start optimizations~\cite{serverlesslora, pipeboost, medusa, slinfer}.
+
+\InstaInfer \cite{prewarm-not-enough} surpasses pre-warming and proposes pre-loading model data directly to the GPU.
+\InstaInfer~does not evaluate against LLMs, but the technique shows promise for other ML inference workloads.
+
+\paragraph{Serving Density.}
+The heterogeneous nature of LLM inference creates a significant imbalance in resource utilization.
+LLM inferences compete for GPU time, leaving CPU compute underutilized.
+Harvesting this spare compute is as an opportunity to increase serving capacity in serverless systems.
+\SLINFER~\cite{slinfer} demonstrates that CPUs equipped with matrix accelerators (Intel AMX) are capable of serving small to mid sized LLMs without violating SLOs.
+
+%Historically, GPUs have optimized for maximum performance on a single task, exposing rigid programming interfaces that do not lend to resource sharing.
+%However, as GPU demand has grown, GPU partitioning interfaces have matured ~\cite{nvidia-mps, amd-spx}.
+CPU compute is not the only resource underutilized, the memory bandwidth heavy nature of LLM inference leaves plenty of GPU compute headroom \cite{llama-paper}.
+\WAGES~explores GPU sharing through NVIDIA Multi-Process Service (MPS), partitioning GPUs into multiple instances for simultaneous inference of multiple models~\cite{WAGES}.
+Additionally, GPUs expose fine grained frequency controls, which \WAGES~leverages to minimize energy consumption during LLM execution.
+
+\iantodo{\Torpor project}
+
+%\paragraph{Industry Traces}
+%LMSYS
+%ServeGen
+%BurstGPT
+
+%-------------------------------------------------------------------------------
+\bibliographystyle{plain}
+\bibliography{\jobname}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%  LocalWords:  endnotes includegraphics fread ptr nobj noindent
+%%  LocalWords:  pdflatex acks
+
