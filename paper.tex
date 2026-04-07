@@ -60,24 +60,6 @@
 
 \newcommand{\iantodo}[1]{\todo[color=green!40]{#1}}
 
-% inlined bib file
-\usepackage{filecontents}
-
-%-------------------------------------------------------------------------------
-\begin{filecontents}{\jobname.bib}
-%-------------------------------------------------------------------------------
-@misc{serverlessllm,
-      title={ServerlessLLM: Low-Latency Serverless Inference for Large Language Models}, 
-      author={Yao Fu and Leyang Xue and Yeqi Huang and Andrei-Octavian Brabete and Dmitrii Ustiugov and Yuvraj Patel and Luo Mai},
-      year={2024},
-      eprint={2401.14351},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2401.14351}, 
-}
-
-\end{filecontents}
-
 %-------------------------------------------------------------------------------
 \begin{document}
 %-------------------------------------------------------------------------------
@@ -182,16 +164,16 @@ By keeping base models loaded in GPU memory, additional inferences can be served
 LLM inference engines leverage two large datastructures to optimize inference throughput: KV caches and CUDA graphs.
 These datastructures are constructed before inference starts, and contribute to cold start delays in the serverless context.
 \Medusa~\cite{medusa} targets this initialization overhead with materialization, delegating a portion of the initialization to offline preprocessing.
-\Medusa introduces optimizations to remove dynamic memory mangement during KV cache creation, and further parallelizes this stage alongside model loading.
+\Medusa~introduces optimizations to remove dynamic memory mangement during KV cache creation, and further parallelizes this stage alongside model loading.
 Similarly, CUDA graphs are consistent in structure between consecutive model loads, but still hold runtime dependencies on dynamically determined data pointer values.
-\Medusa addresses non-determinism by inserting a shim layer to abstract runtime dependent kernel parameters.
+\Medusa~addresses non-determinism by inserting a shim layer to abstract runtime dependent kernel parameters.
 
 \paragraph{Pre-warming.}
 Pre-warming is an established, industry recognized technique in traditional serverless systems to mitigate cold starts.
 Data needed to execute a function instance is proactively loaded into DRAM in anticipation of future requests, drastically reducing container loading overhead.
 Naturally, serverless LLMs have also adopted pre-warming.
 
-\DEEPSERVE \cite{DEEPSERVE} implements pre-warming natively by predictively loading up to 1.5TB worth of models to DRAM.
+\DEEPSERVE \cite{deepserve} implements pre-warming natively by predictively loading up to 1.5TB worth of models to DRAM.
 Unfortunately for LLM inferences, even if the model is present in DRAM, loading to GPU memory can still take significant time.
 Many prior works assume pre-warming as an implicit starting point for cold start optimizations~\cite{serverlesslora, pipeboost, medusa, slinfer}.
 
@@ -204,10 +186,8 @@ LLM inferences compete for GPU time, leaving CPU compute underutilized.
 Harvesting this spare compute is as an opportunity to increase serving capacity in serverless systems.
 \SLINFER~\cite{slinfer} demonstrates that CPUs equipped with matrix accelerators (Intel AMX) are capable of serving small to mid sized LLMs without violating SLOs.
 
-%Historically, GPUs have optimized for maximum performance on a single task, exposing rigid programming interfaces that do not lend to resource sharing.
-%However, as GPU demand has grown, GPU partitioning interfaces have matured ~\cite{nvidia-mps, amd-spx}.
-CPU compute is not the only resource underutilized, the memory bandwidth heavy nature of LLM inference leaves plenty of GPU compute headroom \cite{llama-paper}.
-\WAGES~explores GPU sharing through NVIDIA Multi-Process Service (MPS), partitioning GPUs into multiple instances for simultaneous inference of multiple models~\cite{WAGES}.
+CPU compute is not the only resource underutilized, the memory bandwidth heavy nature of LLM inference leaves plenty of GPU compute headroom \cite{llama3}.
+\WAGES~explores GPU sharing through NVIDIA Multi-Process Service (MPS), partitioning GPUs into multiple instances for simultaneous inference of multiple models~\cite{wages}.
 Additionally, GPUs expose fine grained frequency controls, which \WAGES~leverages to minimize energy consumption during LLM execution.
 
 \iantodo{\Torpor project}
@@ -219,7 +199,7 @@ Additionally, GPUs expose fine grained frequency controls, which \WAGES~leverage
 
 %-------------------------------------------------------------------------------
 \bibliographystyle{plain}
-\bibliography{\jobname}
+\bibliography{references}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
