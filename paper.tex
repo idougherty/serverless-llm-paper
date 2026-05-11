@@ -150,8 +150,7 @@ Still, a gap remains in assessing the suitability of AI workloads to the serverl
 }
 A precondition of serverless deployments is that client instances should be packageable --- a serverless framework must be able to provision resources and spin up new instances in order to meet incoming request load.
 The workloads behind generative AI demand are diverse: spanning LLM inferences, model training and fine tuning, agentic workloads, semantic data stores and more.
-We focus on LLM inferences and agentic workloads, as they dominate current AI deployments~\cite{flexera2026cloud, cloudera2025agents, vizard2025agentic} and also show potential for the serverless model.
-
+We focus on LLM inferences and agentic workloads, as they dominate current AI deployments~\cite{flexera2026cloud, cloudera2025agents, vizard2025agentic} and also show potential to fit the serverless model.
 
 \textbf{
 Recent work has proven the viability of serverless LLM inferencing, primarily for small to medium sized custom models~\cite{serverlessllm, deepserve, serverlesslora, slinfer, hydraserve, wages, prewarm-not-enough, pipeboost}.
@@ -164,11 +163,15 @@ Small to mid-sized models show promise in both mitigating startup times, resourc
 We view recent trends in using small fine tuned models for agent task execution~\cite{belcak2025smalllanguagemodelsfuture} driving the deployment of many application-specific serverless LLM deployments.  
 
 \textbf{
-As a driving force behind current AI demand, extending agents into serverless deployments offers enormous potential for reducing the resource footprint of AI.
-% The applicability of agentic workloads to the serverless framework remains largely unexplored, despite being a driving force behind current AI demand~\cite{cloudera2025agents, vizard2025agentic}.
+Increasingly, agents are the driving workload behind LLM inferencing~\cite{agent-use}.
 }
-Agents are distinct from traditional serverless workloads in a number of ways; they rely on heterogeneous compute while exhibiting non-deterministic and long running behavior.
-A number of optimizations have been proposed to improve agent serving at scale~\cite{raj2026understandinganalyzingoptimizingagentic, wei2026agentxpuefficientschedulingagentic, wadlom2026efficientllmservingagentic, pagonas2025cortexworkflowawareresourcepooling}, however extending agents to the serverless model remains largely unexplored. 
+% As a driving force behind current AI demand, extending agents into serverless deployments offers enormous potential for reducing the resource footprint of AI.
+The suitability of agentic workloads to the serverless framework remains largely unexplored, despite being a dominant component in current AI deployments~\cite{cloudera2025agents, vizard2025agentic}.
+Moreover, the resource footprint of agents remains uncharacterized, which presents a barrier to the development of serverless policies for agents.
+Recent work from agent serving space provides a number of insights to optimize inference hosting with application level context~\cite{raj2026understandinganalyzingoptimizingagentic, wei2026agentxpuefficientschedulingagentic, wadlom2026efficientllmservingagentic, pagonas2025cortexworkflowawareresourcepooling}.
+We propose using similar context to optimize serverless agent deployments.
+% Agents are distinct from traditional serverless workloads in a number of ways; they rely on heterogeneous compute while exhibiting non-deterministic and long running behavior.
+% A number of optimizations have been proposed to improve agent serving at scale~\cite{raj2026understandinganalyzingoptimizingagentic, wei2026agentxpuefficientschedulingagentic, wadlom2026efficientllmservingagentic, pagonas2025cortexworkflowawareresourcepooling}, however extending agents to the serverless model remains largely unexplored. 
 % Agents depend on many other services for context.
 % How can agentic workloads be characterized, resource footprint and execution times.
 % What is the best deployment configuration?
@@ -177,7 +180,7 @@ In this paper we contribute the following:
 \begin{itemize}
     \item We summarize the state of the art in serverless LLM hosting, covering an array of cold start mitigation techniques and serving density optimizations.
     \item We present practical serverless deployment scenarios for agents and illustrate hidden challenges in serving agentic workloads.
-    \item We perform a workload characterization of representative agentic workloads, guiding the selection of serverless policies.
+    \item We perform a characterization of representative agentic workloads, guiding the design of serverless policies.
 \end{itemize}
 
 % \task{Still need to connect why this paper puts dual focus on LLMs \& agents.}
