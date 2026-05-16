@@ -56,6 +56,7 @@
 \usepackage{todonotes}
 % to be able to draw some self-contained figs
 \usepackage{tikz}
+\usepackage{circuitikz}
 \usepackage{amsmath}
 
 \newcommand{\iantodo}[1]{\todo[color=green!40]{#1}}
@@ -89,8 +90,6 @@ Second Institution}
 %-------------------------------------------------------------------------------
 \begin{abstract}
 %-------------------------------------------------------------------------------
-
-
 
 % \textbf{Once upon a time.}
 Accelerating generative AI adoption has spurred the expansion of datacenters, who amass troves of GPUs, DRAM, and SSDs in an effort to feed emerging resource-hungry AI workloads.
@@ -143,33 +142,36 @@ Most AI workloads are executed in the cloud~\cite{kulkarni2021gpu, gartner2022ia
 In the always-on model, software runs continuously regardless of request traffic. 
 In contrast, serverless deployments run only when needed, invoked in response to incoming requests~\cite{kounev2023serverless}.
 The serverless model allows hardware to be shared across workloads and tenants, reducing the waste of precious compute resources.
-Additionally, serverless users gain the added benefit of flexible billing, paying for the resources consumed.
+Additionally, serverless users gain the added benefit of flexible billing, paying only for the resources consumed.
 
 \textbf{
 Still, a gap remains in assessing the suitability of AI workloads to the serverless model. 
 }
-A precondition of serverless deployments is that client instances should be packageable --- a serverless framework must be able to provision resources and spin up new instances in order to meet incoming request load.
-The workloads behind generative AI demand are diverse: spanning LLM inferences, model training and fine tuning, agentic workloads, semantic data stores and more.
-We focus on LLM inferences and agentic workloads, as they dominate current AI deployments~\cite{flexera2026cloud, cloudera2025agents, vizard2025agentic} and also show potential to fit the serverless model.
+The AI workloads behind generative AI are diverse: spanning LLM inferences, model training, fine tuning, agentic workloads, semantic data stores and more.
+To fit serverless deployment, a workload should meet two criteria: (1) requests should arrive intermittently, a constant demand would not benefit from serverless scaling. (2) The deployment should be packageable and able launch new instances on demand.
+% A precondition of serverless deployments is that client instances should be packageable --- a serverless framework must be able to provision resources and spin up new instances on-demand in order to meet incoming request load.
+We focus on LLM inferences and agentic workloads, as they dominate current AI deployments~\cite{flexera2026cloud, cloudera2025agents, vizard2025agentic} and also show potential for request serving with ephemeral serverless backends.
 
-\textbf{
-Recent work has proven the viability of serverless LLM inferencing, primarily for small to medium sized custom models~\cite{serverlessllm, deepserve, serverlesslora, slinfer, hydraserve, wages, prewarm-not-enough, pipeboost}.
-}
-On-demand loading of large LLMs can cause significant cold-start delays, where requests must wait on standby for model initialization before they are serviced.
+Large closed weight models such as ChatGPT~\cite{chatgpt}, Gemini~\cite{gemini}, and Claude~\cite{claude} see continuous demand, and would not benefit from serverless scale-to-zero mechanisms.
+However, we view recent trends in using small fine tuned models for narrowly scoped tasks driving the deployment of many custom, less frequently invoked LLMs~\cite{belcak2025smalllanguagemodelsfuture, rios2025huggingface}.
+Small to mid-sized models can deliver similar performance for domain specific tasks at a fraction of the size, making them far more efficient than a large generalist model.
+Adapting these LLM deployments to the serverless model presents an opportunity for hardware sharing, however LLM inferences prove challenging to efficiently deploy under serverless.
+On-demand loading of model weights can cause significant cold-start delays, where requests must wait on standby for model initialization before they are serviced.
 Additionally, the large request footprint of each individual model can cause GPU contention during periods of high load.
-% Not all LLMs are suitable for serverless, large closed weight models such as ChatGPT~\cite{chatgpt}, Gemini~\cite{gemini}, and Claude~\cite{claude} see continuous demand, aligning closely with always-on deployments.
-Recent work alleviates some of these costs~\cite{serverlessllm, deepserve, serverlesslora, slinfer, hydraserve, wages, prewarm-not-enough, pipeboost}, however we find that model cold starts remain a challenge.
-Small to mid-sized models show promise in both mitigating startup times, resource footprints, and are increasingly popular.
-We view recent trends in using small fine tuned models for agent task execution~\cite{belcak2025smalllanguagemodelsfuture} driving the deployment of many application-specific serverless LLM deployments.  
+We survey recent work that proves the viability of serverless LLM inferencing~\cite{serverlessllm, deepserve, serverlesslora, slinfer, hydraserve, wages, prewarm-not-enough, pipeboost}, however we find that model cold starts remain a challenge.
+% Recent work mitigates these costs through a variety of model loading and serving optimizations~\cite{serverlessllm, deepserve, serverlesslora, slinfer, hydraserve, wages, prewarm-not-enough, pipeboost}, however we find that model cold starts remain a challenge.
+
+
 
 \textbf{
-Increasingly, agents are the driving workload behind LLM inferencing~\cite{agent-use}.
+In contrast to LLM inferencing, the suitability of agentic workloads to serverless remains largely unexplored --- despite being a dominant component of current AI cloud deployments~\cite{cloudera2025agents, vizard2025agentic}.
 }
-% As a driving force behind current AI demand, extending agents into serverless deployments offers enormous potential for reducing the resource footprint of AI.
-The suitability of agentic workloads to the serverless framework remains largely unexplored, despite being a dominant component in current AI deployments~\cite{cloudera2025agents, vizard2025agentic}.
-Moreover, the resource footprint of agents remains uncharacterized, which presents a barrier to the development of serverless policies for agents.
-Recent work from agent serving space provides a number of insights to optimize inference hosting with application level context~\cite{raj2026understandinganalyzingoptimizingagentic, wei2026agentxpuefficientschedulingagentic, wadlom2026efficientllmservingagentic, pagonas2025cortexworkflowawareresourcepooling}.
-We propose using similar context to optimize serverless agent deployments.
+% Moreover, the resource footprint of agents remains uncharacterized, which presents a barrier to the development of serverless policies for agents.
+Agents are distinct from traditional serverless workloads in a number of ways; they rely on heterogeneous compute while exhibiting non-deterministic and long running execution times.
+We present a wholistic characterization of agentic workloads, exploring request patterns, resource footprints, and execution overheads over representative agent architectures to inform the development of serverless policies.
+% We further explore potential deployment scenarios for agents on existing serverless platforms.
+Recent work on agent serving leverages application level workflow structure to optimize LLM inference serving~\cite{raj2026understandinganalyzingoptimizingagenticcpucentric, wei2026agentxpuefficientschedulingagentic, wadlom2026efficientllmservingagentic, pagonas2025cortexworkflowawareresourcepooling}.
+We propose extending this workflow structure into modular agent deployments that are more amenable for serverless infrastructure.
 % Agents are distinct from traditional serverless workloads in a number of ways; they rely on heterogeneous compute while exhibiting non-deterministic and long running behavior.
 % A number of optimizations have been proposed to improve agent serving at scale~\cite{raj2026understandinganalyzingoptimizingagentic, wei2026agentxpuefficientschedulingagentic, wadlom2026efficientllmservingagentic, pagonas2025cortexworkflowawareresourcepooling}, however extending agents to the serverless model remains largely unexplored. 
 % Agents depend on many other services for context.
@@ -179,9 +181,10 @@ We propose using similar context to optimize serverless agent deployments.
 In this paper we contribute the following:
 \begin{itemize}
     \item We summarize the state of the art in serverless LLM hosting, covering an array of cold start mitigation techniques and serving density optimizations.
-    \item We present practical serverless deployment scenarios for agents and illustrate hidden challenges in serving agentic workloads.
     \item We perform a characterization of representative agentic workloads, guiding the design of serverless policies.
+    \item We present practical serverless deployment scenarios for agents and illustrate hidden challenges in serving agentic workloads.
 \end{itemize}
+
 
 % \task{Still need to connect why this paper puts dual focus on LLMs \& agents.}
 
@@ -275,7 +278,7 @@ The decode stage is the autoregressive process by which each token is generated.
 Each step takes the last token, queries the KV cache, predicts the next token, and updates the KV cache until an termination token is generated.
 This stage is memory bandwidth bound, and determines the throughput of the inference.
 
-\task{what do i need to remember?}
+% \task{what does the reader need to remember?}
 
 \task{inference figure breakdown of stages}
 
@@ -342,7 +345,7 @@ LLM inference engine initialization lies on the cold-start path for newly loaded
 Similarly, CUDA graphs are consistent in structure between consecutive model loads, but still hold runtime dependencies on dynamically determined data pointer values.
 \Medusa~addresses non-determinism by inserting a shim layer to abstract runtime dependent kernel parameters.
 
-\task{medusa claims higher initialization costs than every other paper, i see gpt-oss-20b cuda capture on our A100 at \~20s, consistent with medusa. do all other papers forgo cuda graph capture?}
+% \task{medusa claims higher initialization costs than every other paper, i see gpt-oss-20b cuda capture on our A100 at \~20s, consistent with medusa. do all other papers forgo cuda graph capture?}
 
 \paragraph{Pre-warming.}
 Serverless orchestrators can proactively load instance data into DRAM in anticipation of future requests, drastically reducing container loading overhead.
@@ -375,13 +378,7 @@ In particular, fine tuned models derived from the same base model share over 99\
 By keeping base models loaded in GPU memory, additional inferences can be served by just loading the fine tuned layers, reducing cold start delays and increasing deployment density.
 \PipeBoost~\cite{pipeboost} takes this idea further, and allows for inference to start on the GPU in parallel with the loading of the fine tuned layers.
 
-\task{\Torpor{} project}
-
-% \subsection{Agentic Workloads}
-
-% LLM inferences are only one component of broader AI applications.
-% Raw inferences are extended through agentic environments that allow tool usage through aaaaaaaaaaa 
-
+% \task{\Torpor{} project}
 
 \subsection{Agent Serving}
 
@@ -390,6 +387,8 @@ By keeping base models loaded in GPU memory, additional inferences can be served
 \newcommand{\parrot}{\textsc{Parrot}}
 \newcommand{\autellix}{\textsc{Autellix}}
 \newcommand{\halo}{\textsc{Halo}}
+
+% \task{call forward to why we need to know about DAGs and KV cache optimizations}
 
 \textbf{
 Agentic workloads can vary greatly in architecture and capabilities.
@@ -435,34 +434,94 @@ Alternatively, KV cache reuse can be treated as a first class citizen; \helium{}
 % Throughput vs latency = OLTP vs OLAP
 
 
-\section{Characterizing Agentic Resource Footprint}
+\section{Characterizing Agentic Resource Footprints}
 \textbf{
-We present a case study over three representative agentic workloads.
+To design effective systems to support agentic workloads, we first need to understand their shape.
 }
-These have been chosen to vary in workflow complexity and in tool use.
+% What are the components of an agent's deployment?
+% What resources does an agent require and how long does it execute for?
+A central challenge in characterizing agents is the diversity in their size and complexity.
+Static RAG (Retrieval Augmented Generation) workflows may only invoke a single inference with a small amount of CPU orchestration, while coding agents can exhibit long executions with stateful tool actions.
+We present a case study over three representative agentic workloads, chosen to cover a breadth of workflow archetypes:
+
+% \subsection{Agent Shapes}
+
+% Only really available through prior work, no public repositories available. We are interested in number of nodes, degree of parallelism, time between tool calls/inferences.
+
+% \paragraph{ReAct}
+
+% \paragraph{Scatter Gather}
+
+% \subsection{Agent Characterization}
+
+\begin{figure}[!t]
+\centering
+\resizebox{1\columnwidth}{!}{%
+\input{langchain-workflow}
+}
+\caption{
+Langchain RAG workflow graph.
+}
+\label{fig:langchain-workflow}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\resizebox{1\columnwidth}{!}{%
+\input{mini-swe-agent-workflow}
+}
+\caption{
+Mini SWE agent workflow graph.
+}
+\label{fig:mini-swe-agent-workflow}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\resizebox{1\columnwidth}{!}{%
+% \input{gpt-researcher-workflow}
+\setlength{\fboxrule}{1pt}
+\setlength{\fboxsep}{0pt}
+\color{lightgray}\fbox{\rule{0pt}{1cm}\rule{6cm}{0pt}}
+}
+\caption{
+GPT Researcher workflow graph. Not drawn yet :-(
+}
+\label{fig:gpt-researcher-workflow}
+\end{figure}
 
 \begin{description}
-    \item[Haystack RAG]
-    User Query -> Query Embedding -> ANN Search -> Document Retrieval -> LLM inference.
-    simple, deterministic execution, relies on embedding generation, vector db ANN lookup, and LLM inference.
-    Three resources that need to be dynamically loaded in a serverless context.
-    \item[Mini SWE agent]
-    User Query -> Build context from code/past executions -> LLM inference -> tool calls (execute bash script) -> repeat until LLM determines stopping.
-    linear iteration loop, relies on a sandboxed code execution environment and an LLM.
-    Variable number of iterations.
-    \item[GPT-Researcher]
-    User Query -> Planning LLM inference -> Parallel Execution agents (make web queries, and summarize results) -> build big prompt for final LLM summarization step.
-    Branching agentic calls with orchestrator LLM.
+    \item[Langchain RAG~\ref{fig:langchain-workflow}]
+    A static question answering RAG workflow.
+    The user query is passed to a web search API that returns a list of relevant pages, the agent then fetches the content from each page and uses LexRank~\cite{lexrank} to extract key sentences.
+    The summarized content is passed into a single LLM inference to generate the answer.
+    \item[Mini SWE agent~\ref{fig:mini-swe-agent-workflow}]
+    A linear iterative workflow for solving coding tasks.
+    The execution loop takes a query and prompts an LLM to either generate bash code or exit at each step.
+    The bash code is then executed and the LLM is prompted again with the execution results.
+    This is a simple example of a ReAct style agent architecture, where agents take successive reason, act, and observe steps to achieve some task~\cite{yao2023reactsynergizingreasoningacting}.
+    \item[GPT-Researcher~\ref{fig:gpt-researcher-workflow}]
+    A multi-agent workflow for generating research reports.
+    This is an example of both the scatter-gather architecture and multi-agent execution.
+    A user query is processed by a planning agent, which generates subtopics for multiple researcher agents.
+    Each researcher agent compiles data through a web search API, content fetching, and summarization loop.
+    Finally, a writing agent compiles the results of each researcher into final report.
+    % User Query -> Planning LLM inference -> Parallel Execution agents (make web queries, and summarize results) -> build big prompt for final LLM summarization step.
+    % Branching agentic calls with orchestrator LLM.
 \end{description}
 
-\begin{figure}[ht!]
+Our evaluation is performed on a single node equipped with an A100 GPU (80GB VRAM), two AMD 7343 16-Core Processors and 1TB DDR4 DRAM.
+
+\task{TODO: discuss evaluation results}
+
+\begin{figure}[t!]
     \centering
     \includegraphics[width=0.7\columnwidth]{./temp-execution-times.png}
     \caption{Execution times of agentic workloads broken down by inferences and tool use.}
     \label{fig:bench-execution-times}
 \end{figure}
 
-\begin{figure}[ht!]
+\begin{figure}[t!]
     \centering
     \textbf{CPU Utilization: }\\
     \includegraphics[width=0.8\columnwidth]{./temp-utilization.png}\\
@@ -476,21 +535,15 @@ These have been chosen to vary in workflow complexity and in tool use.
     \label{fig:bench-execution-times}
 \end{figure}
 
-\task{figure of all workloads, latency of each step, followed by memory and compute resources for each step}
+% \subsection{Session Traces}
 
-\task{
-Include a figure of agent dag with tool use, where those tools run.
-}
+% \paragraph{Session Patterns} Available for LLM chats but not for agents. we can gather mean time between user responses, chain lengths
 
-\subsection{Traces}
 
-\paragraph{Session Length} Available for LLM chats but not for 
-
-\paragraph{Agent topologies} Somewhat available through public langsmith records, no central repos though
-
-\paragraph{Inference Input/Output Lengths} Proxy for execution times, informs
-
-\paragraph{Call for Agent Traces} There is a gap in publicly available trace info. We need more traces that capture resource usage, timing, and agent workflow topology in order for the systems community to design solutions.
+% \paragraph{Call for Agent Traces} 
+% There is a gap in publicly available trace info. We need more traces that capture resource usage, timing, and agent workflow topology in order for the systems community to design solutions.
+% However, a lack of public facing data on production agent deployments makes characterizing the reality of agentic workloads an ongoing challenge.
+% Agents are still an emerging technology, and the standards for designing these systems are not yet mature.
 
 % \subsection{Model Choice}
 
@@ -513,171 +566,189 @@ Include a figure of agent dag with tool use, where those tools run.
 
 
 \section{A Vision For Serverless Agents}
-\task{pull insights from serverless LLM traces as motivation in this section}
 
 \textbf{
 Agents are the dominant workload driving AI demand; improving the resource efficiency of agents under the serverless model has potential for mitigating the broader resource footprint of AI.
 }
-Most prior work addresses agent serving from the model inference perspective, however the role of the CPU as a central orchestrator can actually become a source of bottlenecks in agent execution~\cite{raj2026understandinganalyzingoptimizingagentic}.
-We propose using the structured nature of agentic workloads to improve resource efficiency and cold start latency through selectively pre-warming workflow stages.
+However, agents provide a number of challenges that differ from traditional serverless workloads.
+For one, agents can be long running, with execution times on the order of minutes that amplify total resource consumption compared to high turnaround tasks.
+Additionally, agents are stateful; context can persist over subsequent requests and agent executions may rely on stateful actions within tool environments.
+
+We propose the following concepts to amend agents towards practical serverless deployment:
+(1) \textbf{Modular Deployment}: agent workloads have a widely recognized substructure of LLM inferences and tool calls. Deconstructing agent workflow stages into isolated function instances grants flexibility to the serverless orchestrator for instance scaling.
+(2) \textbf{Await Primitives}: despite long running end-to-end executions, many stages within agent workflows experience idle periods where they wait for upstream results. A serverless await primitive enables unloading inactive workflow stages, reducing idle resource consumption.
+(3) \textbf{State Management}: to manage the high degree of session level state between agent requests, we propose a solution for checkpointing and restoring stateful tool environments within the serverless context.
+
+% Most prior work addresses agent serving from the model inference perspective, however the role of the CPU as a central orchestrator can actually become a source of bottlenecks in agent execution~\cite{raj2026understandinganalyzingoptimizingagentic}.
+% We propose using the structured nature of agentic workloads to improve resource efficiency and cold start latency through selectively pre-warming workflow stages.
 
 % agents are long running with variable resource usage, a monolithic deployment may inefficiently utilize provisioned resources
 
-\textbf{
+\begin{figure}[!t]
+\centering
+\resizebox{1\columnwidth}{!}{%
+\input{design-overview}
 }
+\caption{
+Design overview for our proposed modular serverless agent deployment.
+The light green components are additions to existing serverless infrastructure.
+We label interactions within the system: solid lines denote the path of client requests and dashed lines represent infrastructural interactions.
+(1) Client request enters the serverless system, and is routed by the load balancer.
+(2) The load balancer queries the serverless control plane to inform instance startup and scaling.
+(4) Agent backbone retrieves session history from the storage layer. 
+(5) As the agent executes, it updates the Agent Workflow Manager with current stage progress.
+(6) Inferences are routed to an external LLM provider.
+(7) Stateful tool invocations are routed to independent tool sandboxes.
+(8) Tool sandboxes are checkpointed and restored according to Agent Workflow Manager policy.
+}
+\label{fig:design_overview}
+\end{figure}
 
 \subsection{Monolithic vs Modular Deployments}
 
 \textbf{
-An agent can be deployed in a serverless system just as any other function, through isolating CPU orchestration and tooling logic.
+An agent can be deployed in a serverless system today just as any other function, through isolating CPU orchestration and tooling logic.
 }
 Serverless agents may make external API calls for subtasks that require heterogeneous compute or persistence: LLM inference through paid token APIs~\cite{chatgpt, gemini, claude}, custom models hosted on a serverless LLM platform~\cite{deepserve, amazonbedrock, ocigenai, anyscale}, vector databases, document stores, or any number of external resources.
-We refer to this methodology, where all workflow stages are bundled into one package, as the monolithic deployment.
-All serverless scheduling decisions for instance loading, horizontal scaling, and keep-alive must operate on the entire agent's container.
+We refer to this methodology, where all workflow stages are bundled into one package, as the \textit{monolithic deployment}.
+All serverless scheduling decisions for instance loading, keep-alive, and horizontal scaling must operate on the entire agent's container.
 
 \textbf{
 Alternatively, serverless agent deployments can be deconstructed into each workflow's component stages for greater resource efficiency.
 }
-The representation of agentic workloads as DAGs is well supported in agent serving literature~\cite{lin2024parrotefficientservingllmbased, luo2025autellixefficientservingengine, wadlom2026efficientllmservingagentic}, where each node represents an LLM inference, tool execution, or user interaction.
-Under this modular deployment strategy, each workflow stage has the flexibility to be loaded, scaled, or unloaded independently.
+The representation of agentic workloads as control flow graphs (CFGs) is well supported in agent serving literature~\cite{lin2024parrotefficientservingllmbased, luo2025autellixefficientservingengine, wadlom2026efficientllmservingagentic}, where each node represents an LLM inference or tool execution.
+LLM inferences are inherently decoupled from monolithic deployments through API calls to LLM serving systems.
+We advocate for additionally decoupling agent orchestration logic from tool call environments, resulting in a fully \textit{modular deployment}~\ref{fig:design_overview}.
+We discuss tool environments and the handling of tool side effects in \ref{section:state-management}.
+The agent orchestration backbone is left the responsibility for assembling prompts, launching inferences, parsing LLM responses, and invoking tool calls.
+% agent backbone and LLM inferences are stateless (is this true?)
+% tool execution environments have state tied to a user session
+% Treating these environments as independent serverless functions allows each workflow stage the flexibility to be loaded, scaled, or unloaded independently.
+The goal of modularizing deployment is to enable execution with the minimal set of resources active at once, aligning agent deployments with the objectives of the serverless cloud model.
 
+% The tool execution environments that agents iterate over can be a significant source of agent resource usage~\cite{raj2026understandinganalyzingoptimizingagentic, zheng2026agentcgroupunderstandingcontrollingos}.
+% For example, a coding agent may clone a repository, launch bash commands, run compilation targets, in addition to executing arbitrary code.
+% All of these actions are stateful and request specific.
+% Tool execution environments are the environments that agents make stateful actions in to observe.
+
+% \textbf{
+% Exposing the agent workflow DAG to the serverless orchestrator opens possibilities for more efficiently handling
+% }
 
 \textbf{
-Consider a keep-alive policy that selectively keeps the first agent stage warm in DRAM: when a request is fielded, the first stage can execute immediately while latter workflow stages load in parallel.
+Isolating agent workflow components opens possibilities for more efficiently handling serverless instance scaling from zero.
 }
-The resource footprint of a partially warm instance is dramatically reduced while maintaining the performance of the monolithic deployment.
+Consider a keep-alive policy that selectively keeps the agent backbone warm in DRAM: when a request is fielded, the orchestration layer executes immediately while latter tool environments load in parallel.
+The resource footprint of a partially warm instance is dramatically reduced while approaching the performance of the monolithic deployment.
+A similar argument holds for container cold starts. When a request is received for a cold instance, only the orchestration layer must be initialized before function execution begins.
+Subsequent tool environments can load in parallel, mitigating the cold start latency compared the coarse loading of monolithic agent deployments.
 
 \textbf{
-A similar argument holds for container cold starts. When a request is received for a cold instance, only the first stage must be initialized before function execution begins.
+The primary challenge of a modular deployment is in which stages to load and when.
 }
-Subsequent model stages can load in parallel, mitigating the cold start latency compared the coarse loading of monolithic agent deployments.
+If workflow stages are only loaded when they are accessed, the system maintains maximal resource efficiency but pays the cost of additional internal cold starts.
+Conversely, if all workflow stages remain loaded over the entirety of the agent's execution, then the deployment offers no efficiency gain over the monolithic deployment.
+We propose the addition of an \textit{Agent Workflow Manager} into the control plane of the serverless system that manages the lifetime of each component stage relative to agent execution progress.
+With the context of an agent's CFG and a history of stage execution times, the agent workflow manager can selectively unload and restore components as they are needed to strike a balance between application performance and hardware efficiency.
 
-\subsection{Small Language Models}
+\paragraph{Small Language Models}
 
-\textbf{
 Despite the industry dominance of large generalist models, small custom models show strong performance on agentic workloads at a fraction of the size~\cite{belcak2025smalllanguagemodelsfuture}.
-}
 The trend towards small language model (SLM) usage in agents is motivated by faster inference speeds and smaller resource footprints at competitive application performance~\cite{belcak2025smalllanguagemodelsfuture}.
 Fine tuned SLMs are an efficient alternative for agentic subtasks that are narrowly scoped and do not require the generality of LLMs.
 Support for SLMs is crucial to sustainably meet today's AI demand.
 We argue that serverless infrastructure for agents should be designed with the deployment of custom SLMs in mind.
 
 \textbf{
-SLMs are a natural fit for serverless deployment; they are lightweight and custom to individual tenants.
+SLMs are a natural fit for serverless deployment; they are lightweight and application specific.
 }
-A number of additional benefits are available for agent SLMs:
-they are small enough for practical CPU inference~\cite{slinfer}, many models can be pre-warmed into DRAM simultaneously, and shared base model weights can be deduplicated for substantial memory savings.
+A number of practical benefits are also available for agent SLMs:
+they are small enough for practical CPU inference~\cite{slinfer}, 
+many models can be pre-warmed into DRAM simultaneously, 
+and shared base model weights can be deduplicated for substantial memory savings.
 
 \textbf{
 Cold starts for serverless SLM deployments can be effectively mitigated through codesign with serverless agents.
 }
-The lifetime of a serverless SLM can be treated as another modular stage in the agent workflow, removing the guesswork from SLM scaling. 
-When a cold agent instance is invoked, the SLM can be loaded onto a GPU immediately instead of waiting for the first inference API call.
-Additionally, SLM instances can be confidently unloaded when upstream agent instances are unloaded.
+Modern serverless LLM platforms still face the fundamental cold-start challenge due to the heavy data movement of model weights into GPU memory.
+However, with the application context from agent workflow execution, the guesswork can be entirely removed from SLM scaling.
+The serverless orchestrator can treat SLM inferences as another modular component of an agent's deployment, proactively loading and unloading the model based on agent execution.
+% When a cold agent instance is invoked, the SLM can be loaded onto a GPU immediately instead of waiting for the first inference API call.
+% Additionally, SLM instances can be confidently unloaded when upstream agent instances are unloaded.
+% \task{research qs: how viable is CPU inference for mitigating cold starts when a model is already loaded in DRAM?}
 
-\subsection{Serverless Closures}
+\subsection{Await Primitives}
 
-\paragraph{Workflow Loading} How much state is captured in an interactive agent run?
+\textbf{
+The introduction of a serverless await primitive provides an opportunity to reduce the resource usage of idle components.
+}
+As outlined above, agents can be deconstructed into an orchestration backbone that calls into a variety of tool environments and LLM inferences.
+Modularizing the agent deployment enables inactive tool environments to be unloaded, however we find that the orchestration backbone experiences a high degree of inactivity as it waits for the results of downstream executions.
+This inactivity is especially prevalent for scatter-gather operations where many LLM inferences are invoked in parallel, and execution cannot continue until the last inference finishes.
+We propose an await primitive that suspends instance execution, allowing the serverless orchestrator the flexibility to unload idle instances.
+\task{
+I want to rewrite this section to go over a programming model instead. 
+I think only talking about await misses the larger context.
+The pitch is that our proposal requires application level changes, however this is common for serverless deployments and our proposed programming model closely matches current agent frameworks e.g. langchain.
+Each stage in an agent workflow is an independent function that takes some state as a parameter and passes results into the next function.
+These functions are arranged into the CFG for deployment, which can easily be extracted and used by the serverless infrastructure for scheduling.
+Some stages are long running API calls to tool environments or LLMs, during which the backbone can be unloaded.
+When the result is ready, it can be passed into the next stage.
+}
 
-\paragraph{KV Cache Offloading} \helium{} style pre-processing and KV cache storage.
+\subsection{State Management}
+\label{section:state-management}
 
-\subsection{Scheduling}
-
-\paragraph{Cold Starts}
-\paragraph{Autoscaling}
-\paragraph{Function Migration}
-
-
-% \paragraph{Industry Traces?}
-% % Notes:
-% % servegen argues that per tenant request patterns stay relatively stable
-% % this motivates keepalive policies by tenant
-% % keepalive can block new requests. (keep KV cache around, keep model loaded)
-% % many existing works implicitly mention prewarming (models to dram), but few provide a real policy for doing so
-
-% \begin{itemize}
-%     \item not sure yet if this should be in related work or elsewhere as supporting analysis
-%     \item LMSYS, ServeGen (Alibaba), BurstGPT (Azure)
-% \end{itemize}
-
-
-% \subsection{Autoscaling}
-
-% \textbf{
-% The nondeterministic execution of agents makes instance scaling challenging.
-% }
-% Agents can spin off long running jobs that process large corpuses of data or they can perform a simple task and yield control.
-% This variation response times is inherent in the varied task complexity that agents are designed to solve.
-% How do you know if you have enough compute allocated to meet incoming request load?
+\textbf{
+We have not yet to addressed a critical design tension for deploying agents on serverless infrastructure: agents are stateful, serverless functions are stateless.
+}
+This mismatch is not a fundamental design blocker, but it does need to be addressed to prevent considerable inefficiencies in stateful function serving.
+From the agent's perspective, state exists at the session level --- exposing a turn based interface to users for iteration on a target task.
+We can break down the agent's state into the following: orchestration state, used by the agent backbone for prompting, and tool execution state, which captures the results of actions within the tool execution environment.
 
 % \textbf{
-% The concept of an SLO for serverless agents is not well defined.
+% An important distinction to make is that session state is accessed at a different granularity than function instances.
 % }
-% Time to First Token (TTFT) and Tokens per Second (TPS) are well established metrics for LLM performance.
-% These metrics work well in simple cases like chat interfaces, but can break down in agentic workloads that produce large non-text artifacts.
-% The tolerable performance for an agent may vary wildly depending on the application.
+% A single agent instance may have multiple simultaneous active user sessions.
+% Therefore, the lifetime of each session varies from the lifetime of an agent.
+% We propose a \textit{session management layer} as a solution to control the lifetime of session level components.
+% The session management layer operates in a similar way to the serverless orchestrator, 
 
-% \textbf{
-% Vertical scaling can be achieved through request batching \cite{raj2026understandinganalyzingoptimizingagentic}.
-% }
-% Batching is an effective mechanism for increasing throughput across many of an agent's tools.
-% Inference batching can increase GPU utilization, query batching for databases can reduce individual request overheads.
+\paragraph{Orchestration State}
+\textbf{
+By isolating the tool execution environment from the orchestration backbone through modular deployment, we remove nearly all of the session state overhead.
+}
+This makes sharing an agent backbone instance across independent user sessions practical, otherwise the memory heavy tool environments would quickly trigger scale-out events.
+The orchestration backbone still requires some session-level state for agent execution: namely the LLM prompt history which captures context from prior user requests.
+This data can be trivially be backed by a key value store on the session ID.
+The history can be retrieved when a request arrives and appended to after each LLM inference.
+\task{optmizations with cloudburst \& dandelion ~\cite{kuchler2025unlockingtrueelasticitycloudnativedandelion, cloudburstberkeley}}
 
-% \textbf{
-% Horizontal scaling is a necessary mechanism in serverless systems when the request load outgrows the resources of a single machine.
-% }
-% The threshold to scale horizontally is complicated within agentic systems due to the variability of resource footprint between individual requests.
-% Agent migration can be a useful tool when scaling out and reconsolidating, especially given the long lifespan of agents.
+\paragraph{Tool Sandbox}
+A tool environment provides agents a sandbox to enact actions and observe their results, this is particularly important for ReAct style agent architectures.
+The level of statefulness required in a tool sandbox varies by agent implementation.
+Some tool invocations are entirely stateless, like the web search in a single-turn RAG agent.
+However, modern coding agents depend heavily on stateful environments, requiring persistent filesytem modifications and shell sessions between requests.
+To support these capabilities within a serverless deployment, we require a mechanism that can snapshot a running instance, and restore that instance on demand.
+CRIU (Checkpoint/Restore In Userspace)~\cite{CRIU} provides precisely this functionality through freezing a containers execution and checkpointing its state to disk.
+This technique is used in AWS Firecracker~\cite{firecracker}, to checkpoint micro VM state just after initialization to minimize cold-start delays.
+We can use the same concept to pause and resume an agent's tool environment according to the workflow manager's policy.
+% \task{research qs: implications for user. paying for storage}
 
-% \subsection{Instance Placement}
-
-% \textbf{
-% Agents are incredibly heterogeneous in nature, making function placement more challenging than 2D bin packing of compute x memory.
-% }
-% Where should agentic logic be placed? Should it be colocated with LLM execution?
-
-% \textbf{
-% Agentic logic can be colocated with LLM inferences where CPUs remain underutilized.
-% }
-
-% \textbf{
-% The prevalence of small agentic LLMs opens the door for CPU inference.
-% }
-% One-off agent instances are better suited to CPU to prevent model loading times, well trafficked agents benefit from GPU inference where throughput can be sustained.
-
-% \textbf{
-% Agents depend on other serverless instances for some workflow stages: models, storage, and other agents.
-% }
-% In the traditional serverless setting, this feature is known as function chains.
-% Prior literature shows that colocating function chains can decrease network contention and improve latency. 
-
-
-% \subsection{Tenant Isolation}
-
-% \subsection{Agent-Inference Codesign}
-
-% \textbf{
-% Through co-designing serverless agents and serverless LLM inferencing platforms, opportunities are exposed to mitigate model cold-starts and improve resource utilization.
-% }
-
-% \textbf{
-% Models can be prewarmed as agent instances are starting up, opening up pipeline parallelism to reduce model cold-starts.
-% }
-% We find in our sample workloads that many agents perform tasks before invoking an LLM inference, commonly to retrieve data in order to build a model context.
-% Even though the end to end performance of agentic workloads is highly variable, individual workflow steps can exhibit more predictable steps.
-% Tapping into this determinism can allow a co-designed serverless platform to effectively the lifetime of agent dependencies to the execution of agents themselves.
-% Similarly, requests to agents can be used to proactively drive scaling decisions for downstream serverless instances. 
-
-% \textbf{
-% KV caches can be stored as persistent function state, reducing prefill time and improving TTFT.
-% }
-% Agents reuse system prompts over successive requests, allowing for KV caches to be effectively reused as well.
-% Particularly the reuse of KV caches may aid the performance of CPU inference, as CPUs struggle with the compute bound prefill stage.
-
-
+\paragraph{KV Cache Management}
+The KV cache is an implicit piece of session state, hidden behind the LLM inference API, but it nonetheless is essential for agent performance.
+Agent prompts share a large degree of context over successive inferences, and prompt caching offers a mechanism to reduce the redundant work of computing the prefill steps for shared tokens.
+Some closed weight LLM APIs expose a degree of control over prompt caching~\cite{openai_prompt_caching, anthropic_prompt_caching} that can enable short term storage, but the flexibility is limited.
+In the context of serverless SLM deployments, a codesigned approach can be taken that stashes KV caches for agent instances.
+\helium{} proposes precomputing the static portion of system prompts at compile time and maintaining a global view over KV caches~\cite{wadlom2026efficientllmservingagentic}.
+Since KV caches can grow to gigabytes in size, the tradeoff between storing to disk and recomputing remains nuanced. 
 
 \section{Conclusion}
 
+We survey the state of the art for serverless hosting of generative AI inference workloads.
+Recent work on serverless LLMs has introduced mechanisms that dramatically improve cold-start costs, however we posit that these costs are still impactful within the context of agent workloads.
+Despite work on LLM serving backends for agentic applications, we find no prior literature on serverless agents.
+We characterize three agent workloads across a variety of popular agent architectures and propose a practical deployment methodology for serverless agents.
 
 %-------------------------------------------------------------------------------
 % \bibliographystyle{plain}

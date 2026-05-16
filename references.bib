@@ -143,7 +143,7 @@ series = {SoCC '24}
       url={https://arxiv.org/abs/2603.16104}, 
 }
 
-@misc{raj2026understandinganalyzingoptimizingagentic,
+@misc{raj2026understandinganalyzingoptimizingagenticcpucentric,
       title={Towards Understanding, Analyzing, and Optimizing Agentic AI Execution: A CPU-Centric Perspective}, 
       author={Ritik Raj and Souvik Kundu and Ishita Vohra and Hong Wang and Tushar Krishna},
       year={2026},
@@ -287,11 +287,17 @@ series = {SoCC '24}
   note         = {Accessed: 2026-04-25}
 }
 
-@misc{firecracker,
-  author       = {{Amazon Web Services}},
-  title        = {Firecracker},
-  howpublished = {\url{https://firecracker-microvm.github.io/}},
-  note         = {Accessed: 2026-04-25}
+@inproceedings {firecracker,
+author = {Alexandru Agache and Marc Brooker and Alexandra Iordache and Anthony Liguori and Rolf Neugebauer and Phil Piwonka and Diana-Maria Popa},
+title = {Firecracker: Lightweight Virtualization for Serverless Applications },
+booktitle = {17th USENIX Symposium on Networked Systems Design and Implementation (NSDI 20)},
+year = {2020},
+isbn = {978-1-939133-13-7},
+address = {Santa Clara, CA},
+pages = {419--434},
+url = {https://www.usenix.org/conference/nsdi20/presentation/agache},
+publisher = {USENIX Association},
+month = feb
 }
 
 @misc{googlecloudfunctions,
@@ -567,4 +573,81 @@ series = {EuroSys '22}
       archivePrefix={arXiv},
       primaryClass={cs.DC},
       url={https://arxiv.org/abs/2311.13588}, 
+}
+
+@misc{zheng2026agentcgroupunderstandingcontrollingos,
+      title={AgentCgroup: Understanding and Controlling OS Resources of AI Agents}, 
+      author={Yusheng Zheng and Jiakun Fan and Quanzhi Fu and Yiwei Yang and Wei Zhang and Andi Quinn},
+      year={2026},
+      eprint={2602.09345},
+      archivePrefix={arXiv},
+      primaryClass={cs.OS},
+      url={https://arxiv.org/abs/2602.09345}, 
+}
+@misc{kuchler2025unlockingtrueelasticitycloudnativedandelion,
+      title={Unlocking True Elasticity for the Cloud-Native Era with Dandelion}, 
+      author={Tom Kuchler and Pinghe Li and Yazhuo Zhang and Lazar Cvetković and Boris Goranov and Tobias Stocker and Leon Thomm and Simone Kalbermatter and Tim Notter and Andrea Lattuada and Ana Klimovic},
+      year={2025},
+      eprint={2505.01603},
+      archivePrefix={arXiv},
+      primaryClass={cs.DC},
+      doi={https://doi.org/10.1145/3731569.3764803},
+      url={https://arxiv.org/abs/2505.01603}, 
+}
+
+@article{cloudburstberkeley,
+author = {Sreekanti, Vikram and Wu, Chenggang and Lin, Xiayue Charles and Schleier-Smith, Johann and Gonzalez, Joseph E. and Hellerstein, Joseph M. and Tumanov, Alexey},
+title = {Cloudburst: stateful functions-as-a-service},
+year = {2020},
+issue_date = {August 2020},
+publisher = {VLDB Endowment},
+volume = {13},
+number = {12},
+issn = {2150-8097},
+url = {https://doi.org/10.14778/3407790.3407836},
+doi = {10.14778/3407790.3407836},
+abstract = {Function-as-a-Service (FaaS) platforms and "serverless" cloud computing are becoming increasingly popular due to ease-of-use and operational simplicity. Current FaaS offerings are targeted at stateless functions that do minimal I/O and communication. We argue that the benefits of serverless computing can be extended to a broader range of applications and algorithms while maintaining the key benefits of existing FaaS offerings. We present the design and implementation of Cloudburst, a stateful FaaS platform that provides familiar Python programming with low-latency mutable state and communication, while maintaining the autoscaling benefits of serverless computing. Cloudburst accomplishes this by leveraging Anna, an autoscaling key-value store, for state sharing and overlay routing combined with mutable caches co-located with function executors for data locality. Performant cache consistency emerges as a key challenge in this architecture. To this end, Cloudburst provides a combination of lattice-encapsulated state and new definitions and protocols for distributed session consistency. Empirical results on benchmarks and diverse applications show that Cloudburst makes stateful functions practical, reducing the state-management overheads of current FaaS platforms by orders of magnitude while also improving the state of the art in serverless consistency.},
+journal = {Proc. VLDB Endow.},
+month = jul,
+pages = {2438–2452},
+numpages = {15}
+}
+
+@article{lexrank,
+  author       = {G{\"{u}}nes Erkan and
+                  Dragomir R. Radev},
+  title        = {LexRank: Graph-based Lexical Centrality as Salience in Text Summarization},
+  journal      = {CoRR},
+  volume       = {abs/1109.2128},
+  year         = {2011},
+  url          = {http://arxiv.org/abs/1109.2128},
+  eprinttype   = {arXiv},
+  eprint       = {1109.2128},
+  timestamp    = {Mon, 13 Aug 2018 16:48:09 +0200},
+  biburl       = {https://dblp.org/rec/journals/corr/abs-1109-2128.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@misc{yao2023reactsynergizingreasoningacting,
+      title={ReAct: Synergizing Reasoning and Acting in Language Models}, 
+      author={Shunyu Yao and Jeffrey Zhao and Dian Yu and Nan Du and Izhak Shafran and Karthik Narasimhan and Yuan Cao},
+      year={2023},
+      eprint={2210.03629},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2210.03629}, 
+}
+
+@misc{anthropic_prompt_caching,
+  title        = {Prompt caching},
+  author       = {{Anthropic}},
+  howpublished = {\url{https://platform.claude.com/docs/en/build-with-claude/prompt-caching}},
+  note         = {Claude API Docs. Accessed: 2026-05-15}
+}
+
+@misc{openai_prompt_caching,
+  title        = {Prompt caching},
+  author       = {{OpenAI}},
+  howpublished = {\url{https://developers.openai.com/api/docs/guides/prompt-caching}},
+  note         = {OpenAI API Documentation. Accessed: 2026-05-15}
 }
