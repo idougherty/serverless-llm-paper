@@ -72,7 +72,7 @@
 \date{}
 
 % make title bold and 14 pt font (Latex default is non-bold, 16 pt)
-\title{\Large \bf Everything You Always Wanted to Know About Serverless AI But Were Too Afraid to Ask}
+\title{\Large \bf Everything You Always Wanted to Know About Serverless AI\\But Were Too Afraid to Ask}
 % \title{\Large \bf Agentic Workflows are Serverless Systems, So deploy them that way!}
 % \title{\Large \bf Not your parent's serverless AI}
 % \title{\Large \bf Who let the AI Agent out on my serverless system?}
@@ -92,21 +92,23 @@ Second Institution}
 %-------------------------------------------------------------------------------
 
 % \textbf{Once upon a time.}
-Accelerating generative AI adoption has spurred the expansion of datacenters, who amass troves of GPUs, DRAM, and SSDs in an effort to feed emerging resource-hungry AI workloads.
+Accelerating generative AI adoption has spurred the expansion of data centers, which amass troves of GPUs, DRAM, and SSDs to feed emerging, resource-hungry agentic AI workloads.
 % As the demand for AI continues to grow, so does the burden on datacenters to manage expensive, heterogeneous, and resource-hungry AI workloads. 
-The serverless cloud model offers a path to boost the resource efficiency of on-demand applications, enabling hardware sharing between tenants and applications --- however, the suitability of emerging AI workloads on serverless remains insufficiently explored.
+The serverless cloud model offers a path to improve the resource efficiency of on-demand applications by enabling hardware sharing between tenants and applications. However, the suitability of emerging AI workloads for serverless remains insufficiently explored.
 % The serverless paradigm, allowing users to pay only for the compute and memory they need, has boosted the resource efficiency of on-demand applications.
 % While some AI services, e.g., LLMs, are in high continuous demand, making them a better fit for the “always-on” server model, many other AI workloads, such as small custom models and emerging agentic workloads, may be a good fit for the serverless model. 
 % \textbf{Villain}
-We survey the state-of-the-art in serverless hosting for text based generative AI and find that:
+
+We survey the state-of-the-art in serverless hosting for text-based generative AI and find that:
 % (1) Although some serverless deployments of AI workloads currently exist, today's serverless systems are not designed for thei memory hungry, heterogeneous demand.
-(1) despite many advancements in serverless LLM hosting, heavy model loading and initialization processes still introduce significant startup latency.
+(1) Despite many advancements in serverless LLM hosting, heavy model loading and initialization processes still introduce significant startup latency.
 (2) Agentic AI workloads have not yet been characterized under the serverless context.
 % \textbf{Hero.}
 % We summarize the state-of-the-art on serverless for AI, agentic workloads and other AI workloads fitting to the serverless model.
-We propose a deployment scheme for agentic workloads that is tailored for serverless, accompanied with pre-warming policies that minimize idle resource footprint and startup latencies.   
+
+We propose a deployment scheme for agentic workloads tailored for serverless, accompanied by pre-warming policies that minimize the idle resource footprint and startup latencies.   
 % We present our vision for the future research directions in this space.
-This paper outlines our vision for promising research directions in serverless agents. 
+This paper outlines promising research directions for serverless agents. 
 
 
 % \textbf{Happily ever after}
@@ -130,58 +132,58 @@ This paper outlines our vision for promising research directions in serverless a
 The growth of generative AI workloads has triggered a colossal shift in computing demand.
 }
 % the shift is a high demand for accelerators and memory
-Generative AI is incredibly resource intensive --- requiring large accelerators, loads of memory, and vast storage capacity.
+Generative AI is incredibly resource-intensive—requiring large accelerators, substantial memory, and vast storage capacity.
 Additionally, the adoption of AI workflows in industry is accelerating, particularly through the use of text-based agentic applications~\cite{flexera2026cloud, cloudera2025agents, vizard2025agentic}.
-To meet the large resource requirements of AI demand, cloud providers are scaling up by building new datacenters and stockpiling hardware~\cite{gvr2023datacenter}.
-This shock has manifested in global supply shortages for GPUs, DRAM, and SSDs~\cite{cnbc2026micron, jeronimo2025memory}.
+To meet the large resource requirements of AI demand, cloud providers are building new datacenters and stockpiling hardware~\cite{gvr2023datacenter}.
+This shock has led to global supply shortages of GPUs, DRAM, and SSDs~\cite{cnbc2026micron, jeronimo2025memory}.
 It is clear that to meet the growing demand of AI, we need serving strategies that can more efficiently manage the hardware underlying emerging AI workloads. 
 
 \textbf{
-Most AI workloads are executed in the cloud~\cite{kulkarni2021gpu, gartner2022iaas, virtualization2020workloads}, where deployments can fall into one of two categories: always-on or serverless. 
+Most AI workloads are executed in the cloud~\cite{kulkarni2021gpu, gartner2022iaas, virtualization2020workloads}, where deployments fall into two categories: \emph{always-on or serverless}. 
 }
-In the always-on model, software runs continuously regardless of request traffic. 
+In the always-on model, software runs continuously regardless of the volume of requests. 
 In contrast, serverless deployments run only when needed, invoked in response to incoming requests~\cite{kounev2023serverless}.
 The serverless model allows hardware to be shared across workloads and tenants, reducing the waste of precious compute resources.
-Additionally, serverless users gain the added benefit of flexible billing, paying only for the resources consumed.
+Additionally, serverless users benefit from flexible billing, paying only for the resources they consume.
 
 \textbf{
 Still, a gap remains in assessing the suitability of AI workloads to the serverless model. 
 }
-The AI workloads behind generative AI are diverse: spanning LLM inferences, model training, fine tuning, agentic workloads, semantic data stores and more.
-To fit serverless deployment, a workload should meet two criteria: (1) requests should arrive intermittently, a constant demand would not benefit from serverless scaling. (2) The deployment should be packageable and able launch new instances on demand.
+The AI workloads behind generative AI are diverse: spanning LLM inferences, model training, fine-tuning, agentic workloads, semantic data stores, and more.
+To fit serverless deployment, a workload should meet two criteria: (1) requests should arrive intermittently; a constant demand would not benefit from serverless scaling. (2) The deployment should be packageable and able to launch new instances on demand.
 % A precondition of serverless deployments is that client instances should be packageable --- a serverless framework must be able to provision resources and spin up new instances on-demand in order to meet incoming request load.
 We focus on LLM inferences and agentic workloads, as they dominate current AI deployments~\cite{flexera2026cloud, cloudera2025agents, vizard2025agentic} and also show potential for request serving with ephemeral serverless backends.
 
-Large closed weight models such as ChatGPT~\cite{chatgpt}, Gemini~\cite{gemini}, and Claude~\cite{claude} see continuous demand, and would not benefit from serverless scale-to-zero mechanisms.
-However, we view recent trends in using small fine tuned models for narrowly scoped tasks driving the deployment of many custom, less frequently invoked LLMs~\cite{belcak2025smalllanguagemodelsfuture, rios2025huggingface}.
-Small to mid-sized models can deliver similar performance for domain specific tasks at a fraction of the size, making them far more efficient than a large generalist model.
-Adapting these LLM deployments to the serverless model presents an opportunity for hardware sharing, however LLM inferences prove challenging to efficiently deploy under serverless.
-On-demand loading of model weights can cause significant cold-start delays, where requests must wait on standby for model initialization before they are serviced.
+Large closed-weight models such as ChatGPT~\cite{chatgpt}, Gemini~\cite{gemini}, and Claude~\cite{claude} see continuous demand and would not benefit from serverless scale-to-zero mechanisms.
+However, we view recent trends in using small fine-tuned models for narrowly scoped tasks, driving the deployment of many custom, less frequently invoked LLMs~\cite{belcak2025smalllanguagemodelsfuture, rios2025huggingface}.
+Small to mid-sized models can deliver similar performance on domain-specific tasks at a fraction of the size, making them far more efficient than large generalist models.
+While adapting these LLM deployments to the serverless model presents an opportunity for hardware sharing, LLM inference also proves challenging to efficiently deploy in a serverless environment.
+On-demand loading of model weights can cause significant cold-start delays, as requests must wait on standby for model initialization before being serviced.
 Additionally, the large request footprint of each individual model can cause GPU contention during periods of high load.
-We survey recent work that proves the viability of serverless LLM inferencing~\cite{serverlessllm, deepserve, serverlesslora, slinfer, hydraserve, wages, prewarm-not-enough, pipeboost}, however we find that model cold starts remain a challenge.
+We survey recent work that proves the viability of serverless LLM inference~\cite{serverlessllm, deepserve, serverlesslora, slinfer, hydraserve, wages, prewarm-not-enough, pipeboost}. However, we find that model cold starts remain a challenge.
 % Recent work mitigates these costs through a variety of model loading and serving optimizations~\cite{serverlessllm, deepserve, serverlesslora, slinfer, hydraserve, wages, prewarm-not-enough, pipeboost}, however we find that model cold starts remain a challenge.
 
 
 
 \textbf{
-In contrast to LLM inferencing, the suitability of agentic workloads to serverless remains largely unexplored --- despite being a dominant component of current AI cloud deployments~\cite{cloudera2025agents, vizard2025agentic}.
+In contrast to LLM inference, the suitability of agentic workloads to serverless remains largely unexplored, despite being a dominant component of current AI cloud deployments~\cite{cloudera2025agents, vizard2025agentic}.
 }
 % Moreover, the resource footprint of agents remains uncharacterized, which presents a barrier to the development of serverless policies for agents.
-Agents are distinct from traditional serverless workloads in a number of ways; they rely on heterogeneous compute while exhibiting non-deterministic and long running execution times.
-We present a wholistic characterization of agentic workloads, exploring request patterns, resource footprints, and execution overheads over representative agent architectures to inform the development of serverless policies.
+Agents differ from traditional serverless workloads in several ways: they rely on heterogeneous compute and exhibit non-deterministic, long-running execution times.
+We present a holistic characterization of agentic workloads, exploring request patterns, resource footprints, and execution overheads over representative agent architectures to inform the development of serverless policies.
 % We further explore potential deployment scenarios for agents on existing serverless platforms.
-Recent work on agent serving leverages application level workflow structure to optimize LLM inference serving~\cite{raj2026understandinganalyzingoptimizingagenticcpucentric, wei2026agentxpuefficientschedulingagentic, wadlom2026efficientllmservingagentic, pagonas2025cortexworkflowawareresourcepooling}.
-We propose extending this workflow structure into modular agent deployments that are more amenable for serverless infrastructure.
+Recent work on agent serving leverages application-level workflow structure to optimize LLM inference serving~\cite{raj2026understandinganalyzingoptimizingagenticcpucentric, wei2026agentxpuefficientschedulingagentic, wadlom2026efficientllmservingagentic, pagonas2025cortexworkflowawareresourcepooling}.
+We propose extending this workflow structure into modular agent deployments that are better suited to serverless infrastructure.
 % Agents are distinct from traditional serverless workloads in a number of ways; they rely on heterogeneous compute while exhibiting non-deterministic and long running behavior.
 % A number of optimizations have been proposed to improve agent serving at scale~\cite{raj2026understandinganalyzingoptimizingagentic, wei2026agentxpuefficientschedulingagentic, wadlom2026efficientllmservingagentic, pagonas2025cortexworkflowawareresourcepooling}, however extending agents to the serverless model remains largely unexplored. 
 % Agents depend on many other services for context.
 % How can agentic workloads be characterized, resource footprint and execution times.
 % What is the best deployment configuration?
 
-In this paper we contribute the following:
+In this paper, we contribute the following:
 \begin{itemize}
-    \item We summarize the state of the art in serverless LLM hosting, covering an array of cold start mitigation techniques and serving density optimizations.
-    \item We perform a characterization of representative agentic workloads, guiding the design of serverless policies.
+    \item We summarize the state of the art in serverless LLM hosting, covering a range of cold-start mitigation techniques and serving density optimizations.
+    \item We characterize representative agentic workloads to guide the design of serverless policies.
     \item We present practical serverless deployment scenarios for agents and illustrate hidden challenges in serving agentic workloads.
 \end{itemize}
 
@@ -221,71 +223,72 @@ In this paper we contribute the following:
 
 
 \textbf{
-Through revisiting the decade of innovation in the traditional serverless domain, we can envision solutions to parallel problems in serverless AI hosting. 
+Through revisiting a decade of innovation in the serverless domain, we envision solutions that parallel problems in serverless AI hosting. 
 }
-% \textbf{
-Serverless computing has become an immensely well established business model offering flexible pay-as-you-go compute~\cite{kounev2023serverless, googlecloudfunctions, azurefunctions, openwhisk, firecracker}.
-% }
-Custom functions are uploaded by clients and cloud providers automatically handle resource provisioning and instance scaling as requests arrive.
-The sharing of underlying compute resources between function instances and tenants allows for greater serving efficiency, but also exposes challenges for function isolation and request response times.
-Requests must be serviced within a specified time frame determined by the provider's Service Level Objectives (SLO), but ideally these requests are handled with a minimum number of machines to most efficiently use the available compute resources.
+Serverless computing has become an immensely well-established business model offering flexible pay-as-you-go compute~\cite{kounev2023serverless, googlecloudfunctions, azurefunctions, openwhisk, firecracker}:
+Clients upload custom functions while cloud providers automatically handle resource provisioning and instance scaling as requests arrive.
+Sharing of compute resources between function instances and tenants enables greater serving efficiency but also introduces challenges for function isolation and request response times.
+Requests must be serviced within a specified time determined by the provider's Service Level Agreement (SLA), while the provider wants to minimize the number of machines used to serve these requests to increase efficiency.
 Hence, serverless systems crucially rely on instance placement and autoscaling policies to schedule function instances as requests stream in.
 
 \textbf{
-A circular dilemma arises in the serverless paradigm: the long-tail clients that benefit the most from flexible billing are ironically the most challenging to effectively serve.
+A circular dilemma arises in the serverless paradigm: the clients who benefit most from flexible billing due to their infrequent request patterns are ironically the most challenging to serve effectively.
 }
 Before a request can be serviced, both the serverless runtime and client function must be loaded and initialized.
-However, function instances that are infrequently invoked will not stay loaded, leading to cold start delays as requests wait for instances to spin up.
+However, infrequently invoked function instances will not remain loaded, leading to cold-start delays as requests wait for them to spin up.
 
 \textbf{
-The cold-start problem has inspired a large number of widely accepted policies to handle function loading and scaling.
+The cold-start problem has inspired numerous widely accepted policies for handling function loading and scaling.
 }
 Since requests feature bursty arrival patterns, keeping instances warm in DRAM for a keep-alive timeout can obviate subsequent cold starts~\cite{lambda, faascache}.
-Opportunistic pre-warming can be used to predictively load instance data before requests arrive~\cite{recycle-containers, prewarm-not-enough}.
+Opportunistic pre-warming predictively loads instance data before requests arrive~\cite{recycle-containers, prewarm-not-enough}.
 Additionally, more functions can be kept warm in DRAM through memory deduplication between instances~\cite{lambda, medes, qiu2023userguidedpagemergingmemory}.
 
 \textbf{
-Alternatively, cold start latency can be attacked head-on by optimizing function loading.
+Alternatively, cold-start latency can be addressed head-on by optimizing function loading.
 }
-Function virtualization between tenants is traditionally provided by containers, but lightweight virtualized language runtimes can be used instead to circumvent heavy container initialization costs~\cite{virtines, firecracker, catalyzer}.
+Function virtualization between tenants is traditionally provided by containers, but using lightweight language runtimes eliminates the heavy initialization costs of containers~\cite {virtines, firecracker, catalyzer}.
 
 \subsection{Anatomy of an LLM Inference}
 
 \textbf{
-LLM inferences are heavyweight, complicated operations that play a central role in generative AI serving. 
+LLM inference is a heavyweight, complicated operation that plays a central role in generative AI serving. 
 }
 Understanding the internal structure of an inference is foundational to many systems optimizations for serving LLMs.
-We divide an inference into 3 stages: initialization (which is performed once at model load time), prefill, and decode --- the latter two of which occur on every inference.
+We divide an inference into 3 stages: initialization, prefill, and decode --- the latter two occur on every inference, while the former occurs only once at model load time.
 
-\paragraph{Initialization}
-Before inference can start, the inference engine must load model weights into VRAM.
-This process is costly, as model weight files are large, reaching hundreds of gigabytes at the top end.
-In addition, the inference engine initializes two more optimizations.
-The first is the capturing of a CUDA graph, which defines the command sequence of kernels launched by the CPU during inference.
-Capturing the CUDA graph allows kernels to be launched on the GPU, eliminating the communication bottleneck between the CPU and GPU~\cite{vllm, medusa}.
-The second optimization is the preallocation of VRAM for the KV cache.
+\noindent\textbf{Initialization.}
+Before running inference, the runtime must load model weights into the GPU's VRAM.
+This process is data-transfer bound because the model weights are large, reaching hundreds of gigabytes.
+In addition, the inference runtime initializes two more optimizations.
+First, the runtime determines the sequence of kernels and data transfers to reduce the CPU-GPU communication bottleneck~\cite{vllm, medusa}.
+% The first is the capturing of a CUDA graph, which defines the command sequence of kernels launched by the CPU during inference.
+% Capturing the CUDA graph allows kernels to be launched on the GPU, eliminating the communication bottleneck between the CPU and GPU.
+Secondly, the runtime pre-allocates VRAM for the KV cache~\cite{vLLM}. 
 % engines: vLLM TensorRT LLM llama.cpp
 % Modern inference engines like vLLM offer "PagedAttention"~\cite{vLLM}, enabling OS-like virtual memory for LLM inferences on GPUs.
 % Not all model weights need to be in VRAM, it is common for only a subset of weights to be active in mixture of expert (MoE) models.
 
-\textbf{Prefill}
+\noindent\textbf{Prefill.}
 The prefill stage ingests the prompt, builds the KV cache, and predicts the first token of the response.
-This stage is compute bound, as the entire prompt is processed in parallel.
-The KV cache is an essential datastructure for LLM inferences, storing intermediate state that would otherwise require duplicate computation during each forward pass of the decode stage.
+This stage is compute-bound, as the entire prompt is processed in parallel.
+The KV cache is an essential data structure for LLM inference, storing intermediate states that would otherwise require re-computation during each forward pass of the decode stage.
 
-\textbf{Decode}
-The decode stage is the autoregressive process by which each token is generated.
-Each step takes the last token, queries the KV cache, predicts the next token, and updates the KV cache until an termination token is generated.
-This stage is memory bandwidth bound, and determines the throughput of the inference.
+\noindent\textbf{Decode.}
+The decode stage is the autoregressive process that generates each token.
+Each step takes the last token, queries the KV cache, predicts the next token, and updates the KV cache until a termination token is generated.
+This stage is memory bandwidth-bound and determines the inference throughput.
 
 % \task{what does the reader need to remember?}
 
 \task{inference figure breakdown of stages}
 
+\task{metrics: time to first token and time to complete result}
+
 \subsection{Serverless LLMs}
 
 \textbf{
-As the community around open weight models has matured, the demand for custom cloud inference solutions has emerged.
+As the community around open-weight models has matured, demand for custom cloud inference solutions has emerged.
 }
 In 2025 alone, the number of models hosted on Hugging Face doubled \cite{rios2025huggingface}.
 This trend reveals a broad interest in open weight LLMs, however hosting a large catalog of LLMs remains challenging.
