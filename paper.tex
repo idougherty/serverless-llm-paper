@@ -506,8 +506,6 @@ GPT Researcher workflow graph. Not drawn yet :-(
     A user query is processed by a planning agent, which generates subtopics for multiple researcher agents.
     Each researcher agent compiles data through a web search API, content fetching, and summarization loop.
     Finally, a writing agent compiles the results of each researcher into final report.
-    % User Query -> Planning LLM inference -> Parallel Execution agents (make web queries, and summarize results) -> build big prompt for final LLM summarization step.
-    % Branching agentic calls with orchestrator LLM.
 \end{description}
 
 Our evaluation is performed on a single node equipped with an A100 GPU (80GB VRAM), two AMD 7343 16-Core Processors and 1TB DDR4 DRAM.
@@ -532,7 +530,7 @@ Our evaluation is performed on a single node equipped with an A100 GPU (80GB VRA
     \textbf{VRAM Utilization: }\\
     \includegraphics[width=0.8\columnwidth]{./temp-utilization.png}
     \caption{Resource usage of agentic workloads as batched requests increase.}
-    \label{fig:bench-execution-times}
+    \label{fig:bench-resource-util}
 \end{figure}
 
 % \subsection{Session Traces}
@@ -575,9 +573,15 @@ For one, agents can be long running, with execution times on the order of minute
 Additionally, agents are stateful; context can persist over subsequent requests and agent executions may rely on stateful actions within tool environments.
 
 We propose the following concepts to amend agents towards practical serverless deployment:
-(1) \textbf{Modular Deployment}: agent workloads have a widely recognized substructure of LLM inferences and tool calls. Deconstructing agent workflow stages into isolated function instances grants flexibility to the serverless orchestrator for instance scaling.
-(2) \textbf{Await Primitives}: despite long running end-to-end executions, many stages within agent workflows experience idle periods where they wait for upstream results. A serverless await primitive enables unloading inactive workflow stages, reducing idle resource consumption.
-(3) \textbf{State Management}: to manage the high degree of session level state between agent requests, we propose a solution for checkpointing and restoring stateful tool environments within the serverless context.
+(1) \textbf{Modular Deployment}:
+agent workloads have a widely recognized substructure of LLM inferences and tool calls.
+Deconstructing agent workflow stages into isolated function instances grants flexibility to the serverless orchestrator for instance scaling.
+(2) \textbf{Serverless Agent Framework}:
+deploying agents on serverless systems requires application level changes.
+We introduce a programming model designed to minimize porting effort from popular agent frameworks while also enabling efficient serverless scaling between agent components.
+%despite long running end-to-end executions, many stages within agent workflows experience idle periods where they wait for upstream results. A serverless await primitive enables unloading inactive workflow stages, reducing idle resource consumption.
+(3) \textbf{Session State Management}:
+to manage the high degree of session level state between agent requests, we propose a solution for checkpointing and restoring stateful tool sandboxes within the serverless context.
 
 % Most prior work addresses agent serving from the model inference perspective, however the role of the CPU as a central orchestrator can actually become a source of bottlenecks in agent execution~\cite{raj2026understandinganalyzingoptimizingagentic}.
 % We propose using the structured nature of agentic workloads to improve resource efficiency and cold start latency through selectively pre-warming workflow stages.
@@ -618,8 +622,8 @@ Alternatively, serverless agent deployments can be deconstructed into each workf
 }
 The representation of agentic workloads as control flow graphs (CFGs) is well supported in agent serving literature~\cite{lin2024parrotefficientservingllmbased, luo2025autellixefficientservingengine, wadlom2026efficientllmservingagentic}, where each node represents an LLM inference or tool execution.
 LLM inferences are inherently decoupled from monolithic deployments through API calls to LLM serving systems.
-We advocate for additionally decoupling agent orchestration logic from tool call environments, resulting in a fully \textit{modular deployment}~\ref{fig:design_overview}.
-We discuss tool environments and the handling of tool side effects in \ref{section:state-management}.
+We advocate for additionally decoupling agent orchestration logic from tool calling sandboxes, resulting in a fully \textit{modular deployment}~\ref{fig:design_overview}.
+We discuss tool sandboxes and the handling of tool side effects in~\ref{section:state-management}.
 The agent orchestration backbone is left the responsibility for assembling prompts, launching inferences, parsing LLM responses, and invoking tool calls.
 % agent backbone and LLM inferences are stateless (is this true?)
 % tool execution environments have state tied to a user session
@@ -677,26 +681,34 @@ The serverless orchestrator can treat SLM inferences as another modular componen
 % Additionally, SLM instances can be confidently unloaded when upstream agent instances are unloaded.
 % \task{research qs: how viable is CPU inference for mitigating cold starts when a model is already loaded in DRAM?}
 
-\subsection{Await Primitives}
+\subsection{Serverless Agent Framework}
+
 
 \textbf{
-The introduction of a serverless await primitive provides an opportunity to reduce the resource usage of idle components.
+Migrating an agent to serverless infrastructure requires application level changes.
 }
-As outlined above, agents can be deconstructed into an orchestration backbone that calls into a variety of tool environments and LLM inferences.
-Modularizing the agent deployment enables inactive tool environments to be unloaded, however we find that the orchestration backbone experiences a high degree of inactivity as it waits for the results of downstream executions.
-This inactivity is especially prevalent for scatter-gather operations where many LLM inferences are invoked in parallel, and execution cannot continue until the last inference finishes.
-We propose an await primitive that suspends instance execution, allowing the serverless orchestrator the flexibility to unload idle instances.
-\task{
-I want to rewrite this section to go over a programming model instead. 
-I think only talking about await misses the larger context.
-The pitch is that our proposal requires application level changes, however this is common for serverless deployments and our proposed programming model closely matches current agent frameworks e.g. langchain.
-Each stage in an agent workflow is an independent function that takes some state as a parameter and passes results into the next function.
-These functions are arranged into the CFG for deployment, which can easily be extracted and used by the serverless infrastructure for scheduling.
-Some stages are long running API calls to tool environments or LLMs, during which the backbone can be unloaded.
-When the result is ready, it can be passed into the next stage.
-}
+Some level of refactoring is common for migrating any workload to serverless as developers must contend with the limitations of ephemeral function instances.
+However, we note that the event driven nature of agentic workflows naturally suits the serverless model.
+We outline a programming model that complements our modular deployment strategy, enabling stage-wise loading and execution of agent workflows.
 
-\subsection{State Management}
+\textbf{
+Similar to popular agent frameworks, we model each workflow stage as a function execution.
+}
+Each stage takes in the output of the previous stage, executes some work, and returns intermediate state for the succeeding stages.
+The stages then arranged into a control flow graph (CFG) and registered with the serverless agent framework.
+Stage execution is controlled by the framework, which coordinates with the agent workflow manager in the control plane for instance loading decisions.
+This programming model is flexible, and comfortably handles the breadth of agent diversity, from small static workflows to complex multi-agent architectures.
+
+\textbf{
+Agent workflow stages can fall into one of the following: agent orchestration, LLM API calls, or function tool calls.
+}
+On registration with the serverless agent framework, the function is annotated as one of these types, as well as state management context that we explore in~\ref{section:state-management}.
+The serverless agent framework uses these annotations to execute the deployment with the minimal required resource footprint.
+For example, we find that agent orchestration logic experiences a high degree of inactivity as it waits for the results of downstream executions.
+This inactivity is especially prevalent for scatter-gather operations where many LLM inferences are invoked in parallel, and execution cannot continue until the last inference finishes.
+The serverless agent framework can instead scale down the agent backbone during these operations and pass the results into the next workflow stage when they're ready.
+
+\subsection{Session State Management}
 \label{section:state-management}
 
 \textbf{
@@ -718,7 +730,7 @@ We can break down the agent's state into the following: orchestration state, use
 \textbf{
 By isolating the tool execution environment from the orchestration backbone through modular deployment, we remove nearly all of the session state overhead.
 }
-This makes sharing an agent backbone instance across independent user sessions practical, otherwise the memory heavy tool environments would quickly trigger scale-out events.
+%This makes sharing an agent backbone instance across independent user sessions practical, otherwise the memory heavy tool environments would quickly trigger scale-out events.
 The orchestration backbone still requires some session-level state for agent execution: namely the LLM prompt history which captures context from prior user requests.
 This data can be trivially be backed by a key value store on the session ID.
 The history can be retrieved when a request arrives and appended to after each LLM inference.

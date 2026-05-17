@@ -11,12 +11,13 @@
 
         tex = pkgs.texlive.combine {
           inherit (pkgs.texlive) 
-            scheme-small
+            scheme-medium
             latexmk
             amsmath
             todonotes
             breakurl
-            filecontents;
+            filecontents
+            circuitikz;
         };
       in {
         devShells.default = pkgs.mkShell {
