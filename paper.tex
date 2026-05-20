@@ -246,6 +246,17 @@ Function virtualization between tenants is traditionally provided by containers,
 
 \subsection{Anatomy of an LLM Inference}
 
+\begin{figure}[!t]
+\centering
+\resizebox{1\columnwidth}{!}{%
+\includegraphics[width=\textwidth]{./inference-breakdown.png}
+}
+\caption{
+Initialization and inference time breakdown for gpt-oss-20b. \textit{default} uses the default vLLM parameters. \textit{min-startup} skips cuda graph capture on startup, at the cost of decode throughput.
+}
+\label{fig:langchain-workflow}
+\end{figure}
+
 LLM inference is a heavyweight, complicated operation that plays a central role in generative AI serving. 
 We divide an inference into 3 stages: initialization, prefill, and decode --- the latter two occur on every inference, while the former occurs only once at model load time.
 Understanding the internal structure of an inference is foundational to many systems optimizations for serving LLMs.
@@ -271,8 +282,6 @@ The length of the prefill stage is captured by the Time to First Token (TTFT) me
 The decode stage is the autoregressive process that generates each token.
 Each step takes the last token, queries the KV cache, predicts the next token, and updates the KV cache until a termination token is generated.
 This stage is memory bandwidth-bound and determines the inference throughput (measured as tokens per second or TPS).
-
-% \task{what does the reader need to remember?}
 
 \task{inference figure breakdown of stages}
 
@@ -468,7 +477,7 @@ GPT Researcher workflow graph.
 
 \begin{figure*}[t]
     \begin{subfigure}[b]{0.32\textwidth}
-        \includegraphics[width=\textwidth]{./langchain-rag-resource-util.png}
+    \includegraphics[width=\textwidth]{./langchain-rag-resource-util.png}
         \caption{Static RAG Agent.}
         \label{fig:langchain-rag-resource-util}
     \end{subfigure}
