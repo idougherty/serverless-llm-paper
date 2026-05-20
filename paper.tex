@@ -252,7 +252,8 @@ Function virtualization between tenants is traditionally provided by containers,
 \includegraphics[width=\textwidth]{./inference-breakdown.png}
 }
 \caption{
-Initialization and inference time breakdown for gpt-oss-20b. \textit{default} uses the default vLLM parameters. \textit{min-startup} skips cuda graph capture on startup, at the cost of decode throughput.
+Initialization and inference time breakdown for gpt-oss-20b.
+Model loading is measured from DRAM to VRAM.
 }
 \label{fig:langchain-workflow}
 \end{figure}
