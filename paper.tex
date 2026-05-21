@@ -500,12 +500,12 @@ We capture CPU, memory, GPU, and network utilization over the course of executio
 \paragraph{Varying Execution Time.}
 The execution time between each agent varies substantially.
 The static RAG pipeline (\autoref{fig:langchain-rag-resource-util}) executes in X seconds, with $\sim$X\% of time spent solely on the LLM inference.
-Mini SWE Agent (\autoref{fig:mini-swe-resource-util}) spends X turns completing its task over X seconds, roughly equally splitting execution time between inference and tool execution.
+Mini SWE Agent (\autoref{fig:mini-swe-resource-util}) spends 3 turns completing its task over 44 seconds, roughly equally splitting execution time between inference and tool execution.
 GPT researcher (\autoref{fig:gpt-researcher-resource-util}) fans out to 3 researcher agents and invokes the most inferences with 14 total over 128 seconds.
 
 \paragraph{Different Resource Consumption.}
 Just as execution times vary across agent workflows, so does the resource consumption.
-Memory usage is low for the RAG agent and Mini SWE Agent, but GPT-Researcher consumes 3GiB of DRAM.
+Memory usage is $\sim$100MiB for the RAG agent and Mini SWE Agent, but GPT-Researcher consumes 1GiB of DRAM.
 We attribute this to intermediate document stores built from web-scraped content.
 The CPU usage of the RAG agent and GPT-Researcher are also quite low, while Mini SWE Agent exhibits a long tool-calling period that fully utilizes a single core.
 
@@ -516,38 +516,8 @@ While the overall agent spans many resources, not all components execute work si
 This suggests that by loading components independently, we can reduce the agent's instantaneous resource footprint.
 For example, GPT-Researcher uses long prompts, which cause its LLM invocations to take up to 30 seconds to complete.
 Consequently, the agent logic could be unloaded during this time.
-Similarly, Mini SWE Agent experiences an X-second tool call, where the LLM could instead be scaled down.
+Similarly, Mini SWE Agent experiences an 26 second tool call, where the LLM could instead be scaled down.
 We extend this idea into a practical serverless agent deployment scheme in \S\ref{section:serverless_agents}.
-
-% \subsection{Session Traces}
-
-% \paragraph{Session Patterns} Available for LLM chats but not for agents. we can gather mean time between user responses, chain lengths
-
-
-% \paragraph{Call for Agent Traces} 
-% There is a gap in publicly available trace info. We need more traces that capture resource usage, timing, and agent workflow topology in order for the systems community to design solutions.
-% However, a lack of public facing data on production agent deployments makes characterizing the reality of agentic workloads an ongoing challenge.
-% Agents are still an emerging technology, and the standards for designing these systems are not yet mature.
-
-% \subsection{Model Choice}
-
-% \textbf{
-% Picking the LLM to drive an agent is potentially the most impactful decision for both agent accuracy and execution performance.
-% }
-% The right model varies by task complexity and performance requirements.
-% Large reasoning models offer strong task performance, but can be expensive for inference due to long reasoning traces.
-% Recent works have shown viability in using small LLMs to drive agentic workflows.
-% % https://arxiv.org/pdf/2506.02153
-% Agents may even invoke multiple models in adversarial roles to refine answers.
-
-% \textbf{
-% The choice of model is also incredibly impactful in a serverless context, determining different potential optimizations.
-% }
-% Large models are particularly difficult to load in the cold-start case.
-% Small models are faster to load, but also can potentially be executed on the CPU.
-% Fine tuned models can be memory deduplicated from one another, offering more efficient pre-warming.
-% Mixture of expert models only require a subset of active parameters to be loaded on the GPU, cutting down loading times and increasing VRAM headroom for sharing.
-
 
 \section{A Vision For Serverless Agents}
 \label{section:serverless_agents}
