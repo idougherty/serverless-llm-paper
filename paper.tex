@@ -249,9 +249,9 @@ An example depicting inference breakdown across these stages is shown in Figure~
 
 
 \paragraph{Initialization.}
-Before running inference, the runtime must load model weights into the GPU's VRAM (model load in \autoref{fig:inference-breakdown}).
+Before running inference, the runtime must load model weights into the GPU's VRAM (model load in \autoref{fig:inference-breakdown}). 
 This process is data-transfer-bound because model weights are large, ranging from tens to several hundreds of gigabytes~\cite{models}.
-In addition, the inference runtime initializes two more optimizations.
+In addition, the inference runtime performs initialization (init engine in \autoref{fig:inference-breakdown}) which includes compiling the model (e.g., in the case of pytorch) and two optimizations:
 First, the runtime determines the sequence of kernels and data transfers to reduce the CPU-GPU communication bottleneck~\cite{vllm, medusa}.
 Secondly, the runtime pre-allocates VRAM for the KV cache, which is computed during the prefill stage and used to accelerate generation~\cite{vllm}.
 % The first is the capturing of a CUDA graph, which defines the command sequence of kernels launched by the CPU during inference.
@@ -271,12 +271,12 @@ This stage is memory bandwidth-bound and determines the inference throughput (me
 \begin{figure}[!t]
 \centering
 \resizebox{1\columnwidth}{!}{%
-\includegraphics[width=\textwidth]{./inference-breakdown.png}
+\includegraphics[width=\textwidth]{./inference-breakdown.pdf}
 }
 \caption{
 Initialization and inference time breakdown for gpt-oss-20b of a simple summarization task with $\sim$25k token context and $\sim$300 tokens response.
 Model loading is measured from DRAM to VRAM.
-The first four phases show the initialization process, while the latter two, prefill and decode stages, show the inference operation. 
+The first two green and teal phases show the initialization process, while the latter two, prefill and decode stages, show the inference operation. 
 }
 \label{fig:inference-breakdown}
 \end{figure}
@@ -386,7 +386,7 @@ Additionally, GPUs expose fine-grained frequency controls, which \WAGES~leverage
 \newcommand{\autellix}{\textsc{Autellix}}
 \newcommand{\halo}{\textsc{Halo}}
 
-While we agent serving systems have not been covered under the serverless context, many works~\cite{lin2024parrotefficientservingllmbased, luo2025autellixefficientservingengine, wadlom2026efficientllmservingagentic,
+While agent serving has not been covered under the serverless context, many works~\cite{lin2024parrotefficientservingllmbased, luo2025autellixefficientservingengine, wadlom2026efficientllmservingagentic,
 pagonas2025cortexworkflowawareresourcepooling,luo2025autellixefficientservingengine} have explored how agent execution context can aid LLM serving.
 These serving optimizations happen behind the LLM API, within the LLM inference provider's infrastructure.
 We discuss how we can leverage the structure of agent workflows and management of KV caches to accelerate LLM inferences.
@@ -594,7 +594,7 @@ The modularized deployment enables execution with the minimal set of resources a
 % \task{focus here on time-to-first-token vs. time to complete result}
 Separating agent workflow components enables us to leverage serverless instance scaling more efficiently.
 Consider a keep-alive policy that selectively keeps the agent orchestrator warm in DRAM: when a new request arrives, the orchestrator can execute immediately, while latter tool environments load in parallel.
-This approach reduces the resource footprint of the agentic deployment while achieving performance comparable to that of the monolithic deployment.
+This approach will reduce the resource footprint of the agentic deployment while achieving performance comparable to that of the monolithic deployment.
 A similar argument holds for cold starts: when a request arrives, only the orchestrator must be loaded before function execution can begin.
 Subsequent tool sandboxes can be loaded in parallel, mitigating cold-start latency compared to coarse-grained loading in monolithic agent deployments.
 
