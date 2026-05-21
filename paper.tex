@@ -494,13 +494,13 @@ We capture CPU, memory, GPU, and network utilization over the course of executio
 
 \paragraph{Varying Execution Time.}
 The execution time between each agent varies substantially.
-The static RAG pipeline (\autoref{fig:langchain-rag-resource-util}) executes in 4 seconds, with $\sim$50\% of time spent solely on the LLM inference.
+The static RAG pipeline (\autoref{fig:langchain-rag-resource-util}) executes in under 3 seconds, with $\sim$65\% of time spent solely on the LLM inference.
 Mini SWE Agent (\autoref{fig:mini-swe-resource-util}) spends 3 turns completing its task over 44 seconds, roughly equally splitting execution time between inference and tool execution.
 GPT researcher (\autoref{fig:gpt-researcher-resource-util}) fans out to 3 researcher agents and invokes the most inferences with 14 total over 128 seconds.
 
 \paragraph{Different Resource Consumption.}
 Just as execution times vary across agent workflows, so does the resource consumption.
-Memory usage is $\sim$100MiB for the RAG agent and Mini SWE Agent, but GPT-Researcher consumes 1GiB of DRAM.
+Memory usage peaks at $\sim$500MiB for the RAG agent, $\sim$100MiB for the Mini SWE Agent, and 1GiB for GPT-Researcher.
 We attribute this to intermediate document stores built from web-scraped content.
 The CPU usage of the RAG agent and GPT-Researcher are also quite low, while Mini SWE Agent exhibits a long tool-calling period that fully utilizes a single core.
 
