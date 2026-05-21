@@ -101,7 +101,7 @@ The University of British Columbia \quad$\dagger$ Technical University of Munich
 % \textbf{Once upon a time.}
 Accelerating generative AI adoption has driven the expansion of data centers, which amass GPUs, DRAM, and SSDs to feed emerging, resource-hungry AI workloads.
 % As the demand for AI continues to grow, so does the burden on datacenters to manage expensive, heterogeneous, and resource-hungry AI workloads. 
-The serverless cloud model offers a path to improve the resource efficiency of on-demand applications by enabling hardware sharing between tenants and applications. However, the suitability of emerging AI workloads for serverless remains insufficiently explored.
+The serverless cloud model offers a path to improve the resource efficiency of applications through loading instances on-demand. However, the suitability of emerging AI workloads for serverless remains insufficiently explored.
 % The serverless paradigm, allowing users to pay only for the compute and memory they need, has boosted the resource efficiency of on-demand applications.
 % While some AI services, e.g., LLMs, are in high continuous demand, making them a better fit for the “always-on” server model, many other AI workloads, such as small custom models and emerging agentic workloads, may be a good fit for the serverless model. 
 % \textbf{Villain}
@@ -131,47 +131,44 @@ This paper outlines promising research directions for serverless agents.
 
 % Sasha notes: do better job of tying topic sentences to theme of paper
 
-\task{
-1. Introducing Metrics: Time-to-first-token, Time-to-completion, Tokens/sec -- this has an effect on the agent workloads, may be different optimizations needed depending on the workload. 
-
-2. Complete Section 3. 
-
-}
+% \task{
+% 1. Introducing Metrics: Time-to-first-token, Time-to-completion, Tokens/sec -- this has an effect on the agent workloads, may be different optimizations needed depending on the workload. 
+% }
 
 The growth of generative AI workloads has triggered a broad shift in computing demand.
-Generative AI is resource-intensive—requiring large accelerators, substantial memory, and vast storage capacity.
+Generative AI is resource-intensive—requiring large amounts of accelerators, memory, and storage.
 Additionally, the adoption of AI workflows in industry is accelerating, particularly through the use of text-based agentic applications~\cite{flexera2026cloud, cloudera2025agents, vizard2025agentic}.
 To meet the large resource requirements of AI demand, cloud providers are building new datacenters and stockpiling hardware~\cite{gvr2023datacenter}.
 This shock has led to global supply shortages of GPUs, DRAM, and SSDs~\cite{cnbc2026micron, jeronimo2025memory}.
 It is clear that to meet the growing demand of AI, we need strategies to more efficiently manage the hardware underlying emerging AI workloads. 
 
-The AI workloads behind generative AI are diverse: spanning LLM inferences, model training, fine-tuning, agentic workloads, semantic data stores, and more.
-\textit{We focus on LLM inferences and agentic workloads}, as they dominate current AI deployments~\cite{flexera2026cloud, cloudera2025agents, menlo2025midyear} and also show potential to be adapted to the serverless cloud model.
+The workloads behind generative AI are diverse: spanning LLM inferences, model training, fine-tuning, agentic workloads, semantic data stores, and more.
+\textit{We target LLM inferences and agentic workloads}, as they dominate current AI deployments~\cite{flexera2026cloud, cloudera2025agents, menlo2025midyear} and also show potential to be adapted to the serverless cloud model.
 % Adapting these workloads to the serverless model has the potential to reduce their resource usage
 
 % and also show potential for request serving with ephemeral serverless backends.
 
 Serverless computing can reduce resource consumption of applications by only running instances when they receive requests.
-The scaling benefits are passed onto serverless clients as flexible billing, where clients pay only for the uptime of their applications.
+The scaling benefits are passed onto serverless clients through flexible billing, where clients pay only for the uptime of their applications.
 To fit serverless deployment, a workload should meet two criteria: 
 (1) requests should arrive intermittently; a constant demand would not benefit from serverless scaling. 
 (2) The deployment should be packageable and able to launch new instances on demand.
 Instances that take too long to spin up cause cold-start delays, where requests must wait on standby before being serviced.
-Cold-start delays are a primary source of inefficiency in serverless deployments.
+Cold-start delays are a primary source of inefficiency in serverless deployments~\cite{lambda, faascache, catalyzer, medes, qiu2023userguidedpagemergingmemory}.
 
 While large closed-weight models such as ChatGPT~\cite{chatgpt}, Gemini~\cite{gemini}, and Claude~\cite{claude} see continuous demand and would not benefit from serverless deployment, we view recent trends in Small Language Models (SLMs) as a natural fit for the serverless paradigm~\cite{belcak2025smalllanguagemodelsfuture, rios2025huggingface}.
 Small to mid-sized models can deliver similar performance on domain-specific tasks at a fraction of the size, making them far more efficient than large generalist models~\cite{belcak2025smalllanguagemodelsfuture}.
-While adapting these LLM deployments to the serverless model presents an opportunity for hardware sharing, LLM inference also proves challenging to efficiently deploy in a serverless environment.
+While adapting SLM deployments to the serverless model presents an opportunity for hardware sharing, inference also proves challenging to efficiently deploy in a serverless environment.
 On-demand loading of model weights can cause significant cold-start delays.
 Additionally, the large request footprint of each individual model can cause GPU contention during periods of high load.
 We survey recent work that explores the feasibility of serverless LLM inference~\cite{serverlessllm, deepserve, serverlesslora, slinfer, hydraserve, wages, prewarm-not-enough, pipeboost}. However, we find that model cold starts remain a challenge.
 
 In contrast to LLM inference, the suitability of agentic workloads to serverless remains largely unexplored.
 Agents present two primary challenges to serverless deployment: (1) long-running, non-deterministic execution times that complicate instance placement and (2) stateful actions which do not natively persist on ephemeral serverless backends.
-To illuminate the internal structure of agents, we present a holistic characterization of agentic workloads: exploring LLM request patterns, resource footprints, and execution overheads across a variety of agent architectures.
+We present a holistic characterization of agentic workloads: exploring inference patterns, resource footprints, and execution overheads across a variety of agent architectures.
 We propose that agent workflows naturally lend themselves to serverless deployments.
 Each stage can be loaded independently to achieve greater resource efficiency.
-Additionally, with knowledge over agent execution progress, serverless LLM instances can be pre-loaded precisely when they are needed. 
+Additionally, with knowledge over agent inference patterns, serverless LLM instances can be pre-loaded precisely when they are needed.
 We discuss a practical methodology for this modular deployment scheme and propose our vision for future research in serverless agents.
 
 % In this paper, we contribute the following:
@@ -223,11 +220,11 @@ Hence, serverless systems crucially rely on instance placement and autoscaling p
 
 A circular dilemma arises in the serverless paradigm: the clients who benefit most from flexible billing due to their infrequent request patterns are ironically the most challenging to serve effectively.
 Before a request can be serviced, both the serverless runtime and client function must be loaded and initialized.
-However, infrequently invoked function instances will not remain loaded, leading to cold-start delays as requests wait for them to spin up.
+However, infrequently invoked functions will not remain loaded, leading to cold-start delays as requests wait for an instance to spin up.
 
 The cold-start problem has inspired numerous widely accepted policies for handling function loading and scaling.
 Since requests feature bursty arrival patterns, keeping instances warm in DRAM for a keep-alive timeout can obviate subsequent cold starts~\cite{lambda, faascache}.
-Opportunistic pre-warming predictively loads instance data before requests arrive~\cite{recycle-containers, prewarm-not-enough}.
+Opportunistic pre-warming loads instance data before requests arrive~\cite{recycle-containers, prewarm-not-enough}.
 Additionally, more functions can be kept warm in DRAM through memory deduplication between instances~\cite{lambda, medes, qiu2023userguidedpagemergingmemory}.
 We see variations of these techniques applied for serverless LLMs in \S\ref{section:serverless_llms} and we extend these concepts to serverless agents in \S\ref{section:serverless_agents}.
 
@@ -495,11 +492,9 @@ The static RAG agent and GPT-Resaercher use OpenAI's gpt-oss-20b.
 The Mini SWE Agent uses Qwen3-Coder-30B, which is tailored for programming tasks.
 We capture CPU, memory, GPU, and network utilization over the course of execution for each workload, split between the vLLM inference engine and the agent.
 
-\task{we need langchain results, the mini-swe llm phase annotations from langsmith, and system memory for vLLM is confusing since its DRAM not GPU. Crop mini-swe-agent cpu usage, its unreadable. add GPU mem \% to GPU util subplot. use consistent y scale}
-
 \paragraph{Varying Execution Time.}
 The execution time between each agent varies substantially.
-The static RAG pipeline (\autoref{fig:langchain-rag-resource-util}) executes in X seconds, with $\sim$X\% of time spent solely on the LLM inference.
+The static RAG pipeline (\autoref{fig:langchain-rag-resource-util}) executes in 4 seconds, with $\sim$50\% of time spent solely on the LLM inference.
 Mini SWE Agent (\autoref{fig:mini-swe-resource-util}) spends 3 turns completing its task over 44 seconds, roughly equally splitting execution time between inference and tool execution.
 GPT researcher (\autoref{fig:gpt-researcher-resource-util}) fans out to 3 researcher agents and invokes the most inferences with 14 total over 128 seconds.
 
@@ -576,20 +571,12 @@ We discuss tool sandboxes and the handling of tool side effects in~\ref{section:
 The agent's orchestrator remains responsible for assembling prompts, LLM invocations, parsing LLM responses, and invoking tool calls.
 The modularized deployment enables execution with the minimal set of resources active at once, aligning agent deployments with the objectives of the serverless cloud model.
 
-% The tool execution environments that agents iterate over can be a significant source of agent resource usage~\cite{raj2026understandinganalyzingoptimizingagentic, zheng2026agentcgroupunderstandingcontrollingos}.
-% For example, a coding agent may clone a repository, launch bash commands, run compilation targets, in addition to executing arbitrary code.
-% All of these actions are stateful and request specific.
-% Tool execution environments are the environments that agents make stateful actions in to observe.
-
-% \textbf{
-% Exposing the agent workflow DAG to the serverless orchestrator opens possibilities for more efficiently handling
-% }
-\task{focus here on time-to-first-token vs. time to complete result}
+% \task{focus here on time-to-first-token vs. time to complete result}
 Separating agent workflow components enables us to handle serverless instance scaling more efficiently.
 Consider a keep-alive policy that selectively keeps the agent orchestrator warm in DRAM: when a new request arrives, the orchestrator can execute immediately, while latter tool environments load in parallel.
 This approach drastically reduces the resource footprint of the agentic deployment while achieving performance comparable to that of the monolithic deployment.
 A similar argument holds for cold starts: when a request arrives, only the orchestrator must be loaded before function execution can begin.
-Subsequent tool environments can be loaded in parallel, mitigating cold-start latency compared to coarse-grained loading in monolithic agent deployments.
+Subsequent tool sandboxes can be loaded in parallel, mitigating cold-start latency compared to coarse-grained loading in monolithic agent deployments.
 
 The primary challenge of a modular deployment is in which stages to load and when.
 If workflow stages are loaded only when accessed, the system maintains maximum resource efficiency but incurs the cost of additional internal cold starts.
@@ -688,8 +675,8 @@ Since KV caches can grow to gigabytes, the tradeoff between storing to disk and 
 
 We survey the state of the art for serverless hosting of generative AI inference workloads.
 Recent work on serverless LLMs has introduced mechanisms that dramatically improve cold-start costs, we posit that these costs are still impactful within the context of agent workloads.
-Despite work on LLM serving backends for agentic applications, we find no prior literature on serverless agents.
 We characterize three agent workloads across a variety of popular agent architectures and propose a practical deployment methodology for serverless agents.
+Serverless agents present multiple promising research directions in efficiently loading workflow stages, stateful tool handling, and KV cache management.
 
 %-------------------------------------------------------------------------------
 % \bibliographystyle{plain}
